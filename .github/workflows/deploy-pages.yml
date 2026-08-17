@@ -44,9 +44,10 @@ jobs:
 
           # Não exibe navegação na tela de login.
           needle='  function ensureNavigation(){\n    if(document.querySelector(".let-erp-menu-button"))return;'
-          replacement='  function ensureNavigation(){\n    const page=(location.pathname.split("/").pop()||"").toLowerCase();\n    if(page==="login.html"||page==="index.html"||page==="")return;\n    if(document.querySelector(".let-erp-menu-button"))return;'
-          if needle in s:
-              s=s.replace(needle,replacement,1)
+          replacement='  function ensureNavigation(){\n    const routePage=(location.pathname.split("/").pop()||"").toLowerCase();\n    if(routePage==="login.html"||routePage==="index.html"||routePage==="")return;\n    if(document.querySelector(".let-erp-menu-button"))return;'
+          if needle not in s:
+              raise SystemExit('Trecho ensureNavigation não encontrado')
+          s=s.replace(needle,replacement,1)
 
           # Menu lateral entra pela direita, junto ao botão hamburger.
           s=s.replace(
@@ -56,14 +57,17 @@ jobs:
           )
           theme.write_text(s,encoding='utf-8')
 
-          # Evita que computadores da fábrica reutilizem theme.js antigo do cache.
-          cache_tag='20260817-v32-live-2'
+          # Força os computadores a buscarem os arquivos novos.
+          cache_tag='20260817-v32-live-3'
           for html in Path('_site').glob('*.html'):
               text=html.read_text(encoding='utf-8')
               text=text.replace('src="theme.js"',f'src="theme.js?v={cache_tag}"')
               text=text.replace('src="supabase-config.js"',f'src="supabase-config.js?v={cache_tag}"')
               html.write_text(text,encoding='utf-8')
           PY
+
+          # Se houver qualquer erro de JavaScript, NÃO publica.
+          node --check _site/theme.js
 
           cat > _site/index.html <<'EOF'
           <!DOCTYPE html>
@@ -84,7 +88,8 @@ jobs:
           # Verificações obrigatórias antes de publicar.
           grep -q 'let-erp-chat-button' _site/theme.js
           grep -q 'MATERIAL MKT' _site/painel_producao.html
-          grep -q 'theme.js?v=20260817-v32-live-2' _site/painel_producao.html
+          grep -q 'routePage' _site/theme.js
+          grep -q 'theme.js?v=20260817-v32-live-3' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
