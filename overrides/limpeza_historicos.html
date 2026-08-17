@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LET ERP • Limpeza de Históricos</title><link rel="icon" href="favicon.png">
+<style>
+:root{--aqua:#2dd4cf;--ink:#083344;--line:#dbe4ea;--muted:#64748b;--bg:#f4f6f8;--danger:#dc2626}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#0f172a}.topbar{background:var(--aqua);padding:18px 24px}.topbar h1{margin:0;color:var(--ink);font-size:26px}.topbar p{margin:4px 0 0;color:#0f766e;font-weight:800;font-size:12px}.page{max-width:1180px;margin:auto;padding:22px}.guard{background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:13px 15px;border-radius:12px;font-size:11px;font-weight:850;line-height:1.5;margin-bottom:14px}.toolbar{background:white;border:1px solid var(--line);border-radius:15px;padding:15px;display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:16px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-size:9px;font-weight:950;color:#475569}.field input{border:1px solid #cbd5e1;border-radius:10px;padding:11px 12px;font:inherit}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.card{background:white;border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:0 2px 7px rgba(15,23,42,.04)}.card h3{margin:0;font-size:15px;color:var(--ink)}.card p{font-size:10px;color:var(--muted);line-height:1.45;min-height:43px}.count{font-size:28px;font-weight:950;color:#111827;margin:8px 0 12px}.actions{display:flex;gap:7px}.btn{border:0;border-radius:9px;padding:10px 12px;font:inherit;font-size:9px;font-weight:950;cursor:pointer}.preview{background:#ecfeff;color:#0f766e}.delete{background:#fee2e2;color:#b91c1c}.delete:disabled,.preview:disabled{opacity:.5;cursor:wait}.notice{display:none;padding:12px;border-radius:10px;margin-bottom:14px;font-size:10px;font-weight:900}.notice.ok{display:block;background:#dcfce7;color:#166534}.notice.err{display:block;background:#fee2e2;color:#991b1b}.modal{position:fixed;inset:0;background:rgba(15,23,42,.58);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}.modal.open{display:flex}.modal-card{background:#fff;width:min(500px,100%);border-radius:16px;padding:18px}.modal-card h3{margin-top:0}.modal-card p{font-size:11px;color:#475569;line-height:1.55}.modal-card input{width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px;margin:10px 0}.modal-actions{display:flex;gap:8px}.modal-actions button{flex:1;border:0;border-radius:10px;padding:11px;font-weight:950;cursor:pointer}.cancel{background:#e2e8f0;color:#334155}.confirm{background:#dc2626;color:#fff}
+@media(max-width:850px){.grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.grid{grid-template-columns:1fr}.page{padding:14px}}
+</style></head><body>
+<header class="topbar"><h1>Limpeza de Históricos</h1><p>Ferramenta administrativa para manutenção do banco do LET ERP.</p></header>
+<main class="page">
+<div id="notice" class="notice"></div>
+<div class="guard"><strong>⚠ Atenção:</strong> esta tela apaga dados definitivamente. Antes de excluir, escolha uma data limite, confira a quantidade em <strong>VERIFICAR</strong> e confirme digitando <strong>EXCLUIR</strong>. O acesso é restrito a administradores.</div>
+<div class="toolbar"><div class="field"><label>EXCLUIR REGISTROS ANTERIORES A</label><input id="cutoff" type="date"></div><div style="font-size:10px;color:#64748b;font-weight:800">Ex.: escolhendo 01/07/2026, registros anteriores a essa data entram na limpeza.</div></div>
+<div id="grid" class="grid"></div>
+</main>
+<div class="modal" id="confirmModal"><div class="modal-card"><h3 id="confirmTitle">Confirmar limpeza</h3><p id="confirmText"></p><input id="confirmWord" placeholder="Digite EXCLUIR"><div class="modal-actions"><button class="cancel" id="cancelBtn">CANCELAR</button><button class="confirm" id="confirmBtn">EXCLUIR DEFINITIVAMENTE</button></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="theme.js"></script>
+<script>
+const modules=[
+ {id:'pedidos_prontos',name:'Pedidos Prontos',desc:'Exclui pedidos finalizados antigos. Material MKT e provas vinculadas também são removidos.'},
+ {id:'atrasos',name:'Histórico de Atrasos',desc:'Limpa motivos e registros de atraso dos pedidos antigos sem apagar o pedido.'},
+ {id:'auditoria',name:'Atividades / Auditoria',desc:'Apaga o histórico de alterações registrado pelo ERP.'},
+ {id:'acessos',name:'Histórico de Acessos',desc:'Apaga registros antigos de login dos funcionários.'},
+ {id:'reenvios',name:'Reenvios Finalizados',desc:'Exclui reenvios antigos já finalizados e suas provas anexadas.'},
+ {id:'chat',name:'Chat da Equipe',desc:'Apaga mensagens antigas e imagens/vídeos anexados ao chat.'},
+ {id:'material_mkt',name:'Material MKT',desc:'Apaga fotos e vídeos antigos do Marketing e seus registros.'},
+ {id:'financeiro',name:'Financeiro',desc:'Apaga lançamentos financeiros anteriores à data escolhida.'},
+ {id:'programacoes',name:'Programações',desc:'Apaga cupons, promoções e ofertas que terminaram antes da data.'},
+ {id:'calendario',name:'Calendário de Envios',desc:'Apaga marcações de calendário anteriores à data.'}
+];
+let selected=null;
+const db=letErpSupabase;
+function show(text,err=false){const n=document.getElementById('notice');n.className='notice '+(err?'err':'ok');n.textContent=text;clearTimeout(show.t);show.t=setTimeout(()=>n.className='notice',4500)}
+function cutoff(){const v=document.getElementById('cutoff').value;if(!v)throw new Error('Escolha a data limite primeiro.');return v}
+async function adminGuard(){const session=await letErpRequireAuth();if(!session)return false;const {data:u}=await db.auth.getUser();const {data:a}=await db.from('erp_admins').select('user_id').eq('user_id',u.user.id).maybeSingle();if(!a){location.replace('painel_producao.html');return false}return true}
+async function invoke(module,action,confirmation=''){const {data,error}=await db.functions.invoke('limpar-historicos',{body:{module,action,cutoff:cutoff(),confirmation}});if(error)throw error;if(data?.error)throw new Error(data.error);return data}
+function render(){document.getElementById('grid').innerHTML=modules.map(m=>`<section class="card"><h3>${m.name}</h3><p>${m.desc}</p><div class="count" id="count-${m.id}">—</div><div class="actions"><button class="btn preview" data-preview="${m.id}">VERIFICAR</button><button class="btn delete" data-delete="${m.id}">LIMPAR</button></div></section>`).join('');document.querySelectorAll('[data-preview]').forEach(b=>b.onclick=()=>preview(b.dataset.preview,b));document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>askDelete(b.dataset.delete))}
+async function preview(id,btn){try{btn.disabled=true;const r=await invoke(id,'preview');document.getElementById('count-'+id).textContent=r.count;show('Verificação concluída: '+r.count+' registro(s).')}catch(e){show(e.message,true)}finally{btn.disabled=false}}
+async function askDelete(id){try{const r=await invoke(id,'preview');selected=id;const m=modules.find(x=>x.id===id);document.getElementById('confirmTitle').textContent='Limpar '+m.name;document.getElementById('confirmText').innerHTML=`Foram encontrados <strong>${r.count}</strong> registro(s) anteriores à data escolhida. Esta ação não pode ser desfeita.`;document.getElementById('confirmWord').value='';document.getElementById('confirmModal').classList.add('open')}catch(e){show(e.message,true)}}
+document.getElementById('cancelBtn').onclick=()=>document.getElementById('confirmModal').classList.remove('open');
+document.getElementById('confirmBtn').onclick=async()=>{if(document.getElementById('confirmWord').value.trim()!=='EXCLUIR'){show('Digite EXCLUIR para confirmar.',true);return}const btn=document.getElementById('confirmBtn');try{btn.disabled=true;const r=await invoke(selected,'delete','EXCLUIR');document.getElementById('confirmModal').classList.remove('open');document.getElementById('count-'+selected).textContent='0';show(r.deleted+' registro(s) removido(s).')}catch(e){show(e.message,true)}finally{btn.disabled=false}};
+(async()=>{if(!await adminGuard())return;const d=new Date();d.setMonth(d.getMonth()-3);document.getElementById('cutoff').value=d.toISOString().slice(0,10);render()})();
+</script></body></html>
