@@ -98,6 +98,7 @@ jobs:
 
           python3 overrides/developer-badge-patch.py
           python3 overrides/v35-patch.py
+          python3 overrides/v35-finalize.py
 
           node --check _site/theme.js
 
@@ -140,15 +141,17 @@ jobs:
           grep -q 'gerenciar-acessos' _site/acessos.html
           grep -q 'developerBadgeHtml' _site/theme.js
           grep -q 'profileDeveloperBadge' _site/perfil.html
-          test -s _site/developer-badge.png
-          file _site/developer-badge.png | grep -q 'PNG image data'
+          grep -q 'developer-badge.svg' _site/theme.js
+          grep -q 'developer-badge.svg' _site/perfil.html
+          test -s _site/developer-badge.svg
+          grep -q '<svg' _site/developer-badge.svg
           grep -q 'href:"reenvios.html"' _site/theme.js
           grep -q 'limpeza_historicos.html' _site/theme.js
           grep -q 'eh_reenvio' _site/painel_producao.html
           grep -q 'limpar-historicos' _site/limpeza_historicos.html
           grep -q 'reenvio-provas' _site/reenvios.html
           grep -q 'versão 35' _site/painel_producao.html
-          grep -q 'theme.js?v=20260817-v35-reenvios-limpeza' _site/painel_producao.html
+          grep -q 'theme.js?v=20260817-v35-final-svg' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
