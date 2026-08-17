@@ -38,13 +38,31 @@ jobs:
 
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('_site/theme.js')
-          s=p.read_text(encoding='utf-8')
+
+          theme=Path('_site/theme.js')
+          s=theme.read_text(encoding='utf-8')
+
+          # Não exibe navegação na tela de login.
           needle='  function ensureNavigation(){\n    if(document.querySelector(".let-erp-menu-button"))return;'
           replacement='  function ensureNavigation(){\n    const page=(location.pathname.split("/").pop()||"").toLowerCase();\n    if(page==="login.html"||page==="index.html"||page==="")return;\n    if(document.querySelector(".let-erp-menu-button"))return;'
-          if needle not in s:
-              raise SystemExit('Trecho de navegação não encontrado em theme.js')
-          p.write_text(s.replace(needle,replacement,1),encoding='utf-8')
+          if needle in s:
+              s=s.replace(needle,replacement,1)
+
+          # Menu lateral entra pela direita, junto ao botão hamburger.
+          s=s.replace(
+              'position:fixed;left:0;top:0;bottom:0;width:min(330px,88vw);z-index:9998;\n      background:#fff;box-shadow:18px 0 50px rgba(15,23,42,.22);\n      transform:translateX(-105%);transition:transform .24s ease;',
+              'position:fixed;right:0;left:auto;top:0;bottom:0;width:min(330px,88vw);z-index:9998;\n      background:#fff;box-shadow:-18px 0 50px rgba(15,23,42,.22);\n      transform:translateX(105%);transition:transform .24s ease;',
+              1
+          )
+          theme.write_text(s,encoding='utf-8')
+
+          # Evita que computadores da fábrica reutilizem theme.js antigo do cache.
+          cache_tag='20260817-v32-live-2'
+          for html in Path('_site').glob('*.html'):
+              text=html.read_text(encoding='utf-8')
+              text=text.replace('src="theme.js"',f'src="theme.js?v={cache_tag}"')
+              text=text.replace('src="supabase-config.js"',f'src="supabase-config.js?v={cache_tag}"')
+              html.write_text(text,encoding='utf-8')
           PY
 
           cat > _site/index.html <<'EOF'
@@ -53,6 +71,7 @@ jobs:
           <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
             <meta http-equiv="refresh" content="0; url=login.html">
             <title>LET ERP</title>
             <script>location.replace("login.html"+location.search+location.hash);</script>
@@ -61,6 +80,11 @@ jobs:
           </html>
           EOF
           touch _site/.nojekyll
+
+          # Verificações obrigatórias antes de publicar.
+          grep -q 'let-erp-chat-button' _site/theme.js
+          grep -q 'MATERIAL MKT' _site/painel_producao.html
+          grep -q 'theme.js?v=20260817-v32-live-2' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
