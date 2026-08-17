@@ -35,6 +35,18 @@ jobs:
           tr -d '\n' < /tmp/let-erp.b64 | base64 -d > /tmp/let-erp.zip
           unzip -t /tmp/let-erp.zip
           unzip -q /tmp/let-erp.zip -d _site
+
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('_site/theme.js')
+          s=p.read_text(encoding='utf-8')
+          needle='  function ensureNavigation(){\n    if(document.querySelector(".let-erp-menu-button"))return;'
+          replacement='  function ensureNavigation(){\n    const page=(location.pathname.split("/").pop()||"").toLowerCase();\n    if(page==="login.html"||page==="index.html"||page==="")return;\n    if(document.querySelector(".let-erp-menu-button"))return;'
+          if needle not in s:
+              raise SystemExit('Trecho de navegação não encontrado em theme.js')
+          p.write_text(s.replace(needle,replacement,1),encoding='utf-8')
+          PY
+
           cat > _site/index.html <<'EOF'
           <!DOCTYPE html>
           <html lang="pt-BR">
