@@ -36,6 +36,8 @@ jobs:
           unzip -t /tmp/let-erp.zip
           unzip -q /tmp/let-erp.zip -d _site
           cp overrides/acessos.html _site/acessos.html
+          cp overrides/reenvios.html _site/reenvios.html
+          cp overrides/limpeza_historicos.html _site/limpeza_historicos.html
 
           python3 - <<'PY'
           from pathlib import Path
@@ -95,13 +97,14 @@ jobs:
           PY
 
           python3 overrides/developer-badge-patch.py
+          python3 overrides/v35-patch.py
 
           node --check _site/theme.js
 
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess, tempfile, sys
-          for fn in ['login.html','acessos.html','perfil.html']:
+          for fn in ['login.html','acessos.html','perfil.html','reenvios.html','limpeza_historicos.html','painel_producao.html','novo_pedido.html','atividades.html']:
               txt=Path('_site',fn).read_text(encoding='utf-8')
               scripts=re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>',txt,flags=re.I|re.S)
               for js in scripts:
@@ -110,7 +113,9 @@ jobs:
                   r=subprocess.run(['node','--check',name],capture_output=True,text=True)
                   Path(name).unlink(missing_ok=True)
                   if r.returncode:
-                      print(r.stderr); sys.exit(1)
+                      print(fn)
+                      print(r.stderr)
+                      sys.exit(1)
           PY
 
           cat > _site/index.html <<'EOF'
@@ -136,8 +141,14 @@ jobs:
           grep -q 'developerBadgeHtml' _site/theme.js
           grep -q 'profileDeveloperBadge' _site/perfil.html
           test -s _site/developer-badge.png
-          grep -q 'versão 34' _site/painel_producao.html
-          grep -q 'theme.js?v=20260817-v34-developer-badge' _site/painel_producao.html
+          file _site/developer-badge.png | grep -q 'PNG image data'
+          grep -q 'href:"reenvios.html"' _site/theme.js
+          grep -q 'limpeza_historicos.html' _site/theme.js
+          grep -q 'eh_reenvio' _site/painel_producao.html
+          grep -q 'limpar-historicos' _site/limpeza_historicos.html
+          grep -q 'reenvio-provas' _site/reenvios.html
+          grep -q 'versão 35' _site/painel_producao.html
+          grep -q 'theme.js?v=20260817-v35-reenvios-limpeza' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
