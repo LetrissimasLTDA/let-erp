@@ -94,12 +94,14 @@ jobs:
               html.write_text(text,encoding='utf-8')
           PY
 
+          python3 overrides/developer-badge-patch.py
+
           node --check _site/theme.js
 
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess, tempfile, sys
-          for fn in ['login.html','acessos.html']:
+          for fn in ['login.html','acessos.html','perfil.html']:
               txt=Path('_site',fn).read_text(encoding='utf-8')
               scripts=re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>',txt,flags=re.I|re.S)
               for js in scripts:
@@ -131,8 +133,11 @@ jobs:
           grep -q 'MATERIAL MKT' _site/painel_producao.html
           grep -q 'Gerenciar Acessos' _site/theme.js
           grep -q 'gerenciar-acessos' _site/acessos.html
-          grep -q 'versão 33' _site/painel_producao.html
-          grep -q 'theme.js?v=20260817-v33-access-admin' _site/painel_producao.html
+          grep -q 'developerBadgeHtml' _site/theme.js
+          grep -q 'profileDeveloperBadge' _site/perfil.html
+          test -s _site/developer-badge.png
+          grep -q 'versão 34' _site/painel_producao.html
+          grep -q 'theme.js?v=20260817-v34-developer-badge' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
