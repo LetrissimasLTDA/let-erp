@@ -1,12 +1,21 @@
 from pathlib import Path
-import shutil, re
+import re
 
 site=Path("_site")
 
-badge_source=Path("overrides/developer-badge.png")
-if not badge_source.exists() or badge_source.stat().st_size < 100:
-    raise SystemExit("Insígnia Developer PNG inválida.")
-shutil.copyfile(badge_source, site/"developer-badge.png")
+badge_svg='''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Developer">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#29b56d"/><stop offset="1" stop-color="#28a96e"/></linearGradient>
+  <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#62db39"/><stop offset=".5" stop-color="#20ad80"/><stop offset="1" stop-color="#168aa9"/></linearGradient>
+</defs>
+<rect width="200" height="200" rx="28" fill="url(#bg)"/>
+<circle cx="100" cy="100" r="54" fill="none" stroke="#38bf72" stroke-width="6" opacity=".7"/>
+<circle cx="100" cy="100" r="47" fill="none" stroke="url(#ring)" stroke-width="11" stroke-linecap="round" stroke-dasharray="57 17 28 19 42 25 21 16" transform="rotate(-26 100 100)"/>
+<circle cx="100" cy="100" r="34" fill="#2daf6d" stroke="#32bd71" stroke-width="3"/>
+<path d="M63 71l13-12M54 88h18M54 108h15M60 128l14 11M137 70l-13-11M146 88h-18M146 108h-15M140 128l-14 11" stroke="#3ad26a" stroke-width="5" stroke-linecap="round" opacity=".82"/>
+<path d="M72 61l12-7M128 61l-12-7M68 139l13 8M132 139l-13 8" stroke="#198fa0" stroke-width="4" stroke-linecap="round" opacity=".72"/>
+</svg>'''
+(site/"developer-badge.svg").write_text(badge_svg,encoding="utf-8")
 
 theme=site/"theme.js"
 s=theme.read_text(encoding="utf-8")
@@ -40,7 +49,7 @@ replacement='''  function chatProfileFor(id){
 
   function developerBadgeHtml(userId){
     if(!letErpDeveloperIds.has(userId))return "";
-    return '<img class="let-erp-developer-badge" src="developer-badge.png" alt="Developer" title="Developer" aria-label="Developer">';
+    return '<img class="let-erp-developer-badge" src="developer-badge.svg" alt="Developer" title="Developer" aria-label="Developer">';
   }'''
 if anchor not in s:
     raise SystemExit("Helper de perfil do chat não encontrado.")
@@ -82,7 +91,7 @@ replacement='''      if(name){
         if(developerRow){
           const badge=document.createElement("img");
           badge.className="let-erp-developer-badge";
-          badge.src="developer-badge.png";
+          badge.src="developer-badge.svg";
           badge.alt="Developer";
           badge.title="Developer";
           badge.setAttribute("aria-label","Developer");
@@ -107,7 +116,7 @@ if anchor not in t:
 t=t.replace(anchor,replacement,1)
 
 anchor='''      <div><h2 id="displayName">Perfil do funcionário</h2><p id="displaySector">Preencha seus dados abaixo.</p><p id="displayEmail"></p></div>'''
-replacement='''      <div><div class="profile-name-row"><h2 id="displayName">Perfil do funcionário</h2><img id="profileDeveloperBadge" class="profile-developer-badge" src="developer-badge.png" alt="Developer" title="Developer"></div><p id="displaySector">Preencha seus dados abaixo.</p><p id="displayEmail"></p></div>'''
+replacement='''      <div><div class="profile-name-row"><h2 id="displayName">Perfil do funcionário</h2><img id="profileDeveloperBadge" class="profile-developer-badge" src="developer-badge.svg" alt="Developer" title="Developer"></div><p id="displaySector">Preencha seus dados abaixo.</p><p id="displayEmail"></p></div>'''
 if anchor not in t:
     raise SystemExit("Nome do perfil não encontrado.")
 t=t.replace(anchor,replacement,1)
