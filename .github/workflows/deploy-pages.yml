@@ -23,12 +23,39 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Rebuild LET ERP package
+        shell: bash
+        run: |
+          rm -rf _site /tmp/let-erp.zip
+          mkdir -p _site
+          cat .payload2/part-* | tr -d '\n' | base64 -d > /tmp/let-erp.zip
+          unzip -q /tmp/let-erp.zip -d _site
+          cat > _site/index.html <<'EOF'
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta http-equiv="refresh" content="0; url=login.html">
+            <title>LET ERP</title>
+            <script>location.replace("login.html"+location.search+location.hash);</script>
+          </head>
+          <body></body>
+          </html>
+          EOF
+          touch _site/.nojekyll
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
+
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
