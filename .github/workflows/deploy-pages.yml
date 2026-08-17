@@ -27,9 +27,13 @@ jobs:
       - name: Rebuild LET ERP package
         shell: bash
         run: |
-          rm -rf _site /tmp/let-erp.zip
+          rm -rf _site /tmp/let-erp.zip /tmp/let-erp.b64
           mkdir -p _site
-          cat .payload2/part-* | tr -d '\n' | base64 -d > /tmp/let-erp.zip
+          cat .payload2/part-{000..009} > /tmp/let-erp.b64
+          cat .payload2/part-010a .payload2/part-010b >> /tmp/let-erp.b64
+          cat .payload2/part-{011..017} >> /tmp/let-erp.b64
+          tr -d '\n' < /tmp/let-erp.b64 | base64 -d > /tmp/let-erp.zip
+          unzip -t /tmp/let-erp.zip
           unzip -q /tmp/let-erp.zip -d _site
           cat > _site/index.html <<'EOF'
           <!DOCTYPE html>
