@@ -1,0 +1,1 @@
+Badge source is managed separately.
