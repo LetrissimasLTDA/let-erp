@@ -1,12 +1,12 @@
 from pathlib import Path
-import base64, re
+import shutil, re
 
 site=Path("_site")
 
-dataurl=Path("overrides/developer-badge.dataurl.txt").read_text(encoding="utf-8").strip()
-if "," not in dataurl:
-    raise SystemExit("Insígnia Developer inválida.")
-site.joinpath("developer-badge.png").write_bytes(base64.b64decode(dataurl.split(",",1)[1]))
+badge_source=Path("overrides/developer-badge.png")
+if not badge_source.exists() or badge_source.stat().st_size < 100:
+    raise SystemExit("Insígnia Developer PNG inválida.")
+shutil.copyfile(badge_source, site/"developer-badge.png")
 
 theme=site/"theme.js"
 s=theme.read_text(encoding="utf-8")
