@@ -23,21 +23,27 @@ add_perm('financeiro.html','financeiro')
 add_perm('programacoes.html','gestao')
 add_perm('estoque.html','estoque_gerenciar')
 add_perm('atividades.html','gestao')
+add_perm('expedicao.html','expedicao_gerenciar')
 
 # v37.1: remove do menu os três módulos marcados pelo usuário.
-# As páginas permanecem no pacote por compatibilidade/histórico, mas não aparecem na navegação.
 for href in ('alertas.html','produtividade.html','gestao_producao.html'):
     s=re.sub(r'\n?\s*\{href:"'+re.escape(href)+r'"[^\n]*\},?', '', s)
-
 for href in ('alertas.html','produtividade.html','gestao_producao.html'):
     if 'href:"'+href+'"' in s:
         raise SystemExit('Não foi possível remover do menu: '+href)
+
+# v37.2: Expedição simples, somente retiradas e histórico.
+s=re.sub(
+    r'(\{href:"expedicao\.html"[^\n]*?sub:")[^"]*(")',
+    r'\1Retiradas e histórico\2',
+    s,
+    count=1
+)
 
 theme.write_text(s,encoding='utf-8')
 
 # ------------------------------------------------------------
 # Central do Pedido: bloqueia os controles sem permissão.
-# A leitura permanece disponível para acompanhar o pedido.
 # ------------------------------------------------------------
 pedido=site/'pedido.html'
 p=pedido.read_text(encoding='utf-8')
@@ -63,12 +69,10 @@ permissionObserverV37.observe(document.body,{childList:true,subtree:true});
     if marker not in p: raise SystemExit('Central do Pedido: marcador de funções não encontrado')
     p=p.replace(marker,helper+'\n'+marker,1)
     p=p.replace("await loadAll();await Promise.all([loadComments(),loadFiles(),loadStock(),loadHistory()]);", "await loadAll();await Promise.all([loadComments(),loadFiles(),loadStock(),loadHistory()]);applyPermissionUIV37();",1)
-
 pedido.write_text(p,encoding='utf-8')
 
 # ------------------------------------------------------------
-# Painel: exclusão respeita a permissão também visualmente.
-# O banco já faz a validação definitiva.
+# Painel: exclusão respeita a permissão visualmente.
 # ------------------------------------------------------------
 panel=site/'painel_producao.html'
 pp=panel.read_text(encoding='utf-8')
@@ -96,18 +100,15 @@ if 'v37-permission-ui' not in pp:
 '''
     pp=pp.replace('</body>',snippet+'\n</body>',1)
 
-# Atualiza a versão exibida.
-pp=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.1 • Supabase</div>',pp,count=1)
+pp=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.2 • Supabase</div>',pp,count=1)
 panel.write_text(pp,encoding='utf-8')
 
-# Cache final da segurança v37.1.
-cache='20260818-v37-1-menu-cleanup'
+cache='20260818-v37-2-expedicao-retiradas'
 for html in site.glob('*.html'):
     text=html.read_text(encoding='utf-8')
     text=re.sub(r'src="theme\.js(?:\?v=[^"]+)?"',f'src="theme.js?v={cache}"',text)
     text=re.sub(r'src="supabase-config\.js(?:\?v=[^"]+)?"',f'src="supabase-config.js?v={cache}"',text)
     html.write_text(text,encoding='utf-8')
 
-# Marcas para validação do deploy. Mantém compatibilidade com greps antigos.
 with (site/'painel_producao.html').open('a',encoding='utf-8') as f:
-    f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite -->\n')
+    f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite | v37.2-expedicao-retiradas -->\n')
