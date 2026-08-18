@@ -1,35 +1,23 @@
-commit=af03a9fbf963102f2e1ff3634112bb8dadabec63
+commit=dfd20ad15ae37c5c2c54cdc57b59573530e2bd1b
 version=37
-failed_at=2026-08-18T18:11:12Z
+failed_at=2026-08-18T18:11:58Z
 --- files ---
 painel_producao.html=present
 theme.js=present
-factory-suite.js=MISSING
-kanban.html=MISSING
-alertas.html=MISSING
-produtividade.html=MISSING
-gestao_producao.html=MISSING
-permissoes.html=MISSING
-expedicao.html=MISSING
-pedido.html=MISSING
-tv_setor.html=MISSING
-tv_geral.html=MISSING
+factory-suite.js=present
+kanban.html=present
+alertas.html=present
+produtividade.html=present
+gestao_producao.html=present
+permissoes.html=present
+expedicao.html=present
+pedido.html=present
+tv_setor.html=present
+tv_geral.html=present
 tv_producao.html=present
 --- markers ---
-panel_v37=no
-quality_gate=no
-central_order=no
-permissions_nav=no
+panel_v37=yes
+quality_gate=yes
+central_order=yes
+permissions_nav=yes
 --- syntax ---
-node:internal/modules/cjs/loader:1433
-  throw err;
-  ^
-
-Error: Cannot find module '/home/runner/work/let-erp/let-erp/_site/factory-suite.js'
-    at node:internal/modules/cjs/loader:1430:15
-    at node:internal/main/check_syntax:33:20 {
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
-}
-
-Node.js v22.23.2
