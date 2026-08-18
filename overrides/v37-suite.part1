@@ -1,0 +1,110 @@
+from pathlib import Path
+import shutil,re
+site=Path('_site')
+root=Path('overrides')
+
+# ------------------------------------------------------------
+# Copia os novos módulos da suíte v37.
+# ------------------------------------------------------------
+for fn in ['factory-suite.css','factory-suite.js','kanban.html','alertas.html','produtividade.html','gestao_producao.html','permissoes.html','expedicao.html','pedido.html','tv_setor.html','tv_geral.html']:
+    src=root/fn
+    if not src.exists(): raise SystemExit('Arquivo v37 ausente: '+fn)
+    shutil.copyfile(src,site/fn)
+
+# ------------------------------------------------------------
+# Menu + permissões por função.
+# ------------------------------------------------------------
+theme=site/'theme.js'
+s=theme.read_text(encoding='utf-8')
+if 'Kanban de Produção' not in s:
+    marker='{href:"atividades.html", icon:"🧾", label:"Atividades", sub:"Quem alterou cada módulo"}'
+    extra='''{href:"kanban.html", icon:"📋", label:"Kanban de Produção", sub:"Fila visual por etapa"},
+    {href:"alertas.html", icon:"🚨", label:"Central de Alertas", sub:"SLA, atrasos e menções"},
+    {href:"produtividade.html", icon:"🏆", label:"Produtividade", sub:"Funcionários e setores", perm:"gestao"},
+    {href:"gestao_producao.html", icon:"🌡️", label:"Gestão da Produção", sub:"Gargalos, SLA e metas", perm:"gestao"},
+    {href:"expedicao.html", icon:"🚚", label:"Expedição", sub:"Coletas, transportadora e rastreio", perm:"expedicao_gerenciar"},
+    {href:"permissoes.html", icon:"🔐", label:"Permissões", sub:"Acessos por função", perm:"permissoes"},
+    '''+marker
+    if marker not in s: raise SystemExit('NAV Atividades não encontrado')
+    s=s.replace(marker,extra,1)
+
+# O workflow já adicionou adminAttrs. Acrescenta data-permission sem interferir nos adminOnly.
+if 'const permAttrs=item.perm' not in s:
+    old='''      const adminAttrs=item.adminOnly?' data-admin-only="true" style="display:none"':'';
+      return '<a class="let-erp-drawer-link '+(active?'active':'')+'" href="'+item.href+'"'+adminAttrs+'>'+'''
+    new='''      const adminAttrs=item.adminOnly?' data-admin-only="true" style="display:none"':'';
+      const permAttrs=item.perm?' data-permission="'+item.perm+'" style="display:none"':'';
+      return '<a class="let-erp-drawer-link '+(active?'active':'')+'" href="'+item.href+'"'+adminAttrs+permAttrs+'>'+'''
+    if old in s:s=s.replace(old,new,1)
+    else:
+        old2='''      return '<a class="let-erp-drawer-link '+(active?'active':'')+'" href="'+item.href+'">'+'''
+        new2='''      const permAttrs=item.perm?' data-permission="'+item.perm+'" style="display:none"':'';
+      return '<a class="let-erp-drawer-link '+(active?'active':'')+'" href="'+item.href+'"'+permAttrs+'>'+'''
+        if old2 not in s: raise SystemExit('Render dos links do menu não encontrado')
+        s=s.replace(old2,new2,1)
+
+if 'async function hydratePermissionNavigation' not in s:
+    marker='  function ensureNavigation(){'
+    helper='''  async function hydratePermissionNavigation(){
+    let tries=0;
+    while(!window.letErpSupabase && tries<60){await new Promise(r=>setTimeout(r,100));tries++;}
+    if(!window.letErpSupabase)return;
+    try{
+      const {data:sess}=await window.letErpSupabase.auth.getSession();
+      const uid=sess?.session?.user?.id;if(!uid)return;
+      const {data}=await window.letErpSupabase.from("erp_permissoes").select("funcao,permissoes").eq("user_id",uid).maybeSingle();
+      window.LET_ERP_ROLE=data?.funcao||"Produção";
+      window.LET_ERP_PERMISSIONS=data?.permissoes||{};
+      window.letErpHasPermission=(key)=>!!window.LET_ERP_PERMISSIONS?.[key];
+      document.querySelectorAll('[data-permission]').forEach(el=>{
+        const key=el.getAttribute('data-permission');
+        el.style.display=window.LET_ERP_PERMISSIONS?.[key]?"":"none";
+      });
+    }catch(e){console.warn("Permissões do menu:",e)}
+  }
+
+'''
+    if marker not in s: raise SystemExit('ensureNavigation não encontrado')
+    s=s.replace(marker,helper+marker,1)
+
+if 'hydratePermissionNavigation();' not in s:
+    s=s.replace('    hydrateDrawerProfile();','    hydrateDrawerProfile();\n    hydratePermissionNavigation();',1)
+
+theme.write_text(s,encoding='utf-8')
+
+# ------------------------------------------------------------
+# Painel principal: novos campos, prioridade, Central do Pedido,
+# responsável atual e checklist obrigatório antes de finalizar.
+# ------------------------------------------------------------
+panel=site/'painel_producao.html'
+p=panel.read_text(encoding='utf-8')
+
+# CSS visual.
+if 'v37-priority-quality' not in p:
+    css='''<style id="v37-priority-quality">
+.priority-tag{display:inline-flex;align-items:center;margin-left:6px;padding:4px 7px;border-radius:999px;font-size:8px;font-weight:950;vertical-align:middle}.priority-tag.urgent{background:#fef3c7;color:#92400e;border:1px solid #fde68a}.priority-tag.critical{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}.pinned-order-note{margin-top:7px;padding:8px 9px;border-left:4px solid #f59e0b;background:#fffbeb;border-radius:0 8px 8px 0;color:#92400e;font-size:9px;font-weight:850}.custom-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}.custom-tags span{background:#dbeafe;color:#1d4ed8;border-radius:999px;padding:4px 7px;font-size:7px;font-weight:950}.quality-grid-v37{display:grid;grid-template-columns:1fr 1fr;gap:7px}.quality-grid-v37 label{display:flex;align-items:center;gap:8px;border:1px solid #e2e8f0;border-radius:9px;padding:9px;font-size:10px;font-weight:850}.quality-grid-v37 input{width:18px;height:18px}.quality-warning-v37{background:#fffbeb;border:1px solid #fde68a;color:#92400e;padding:9px;border-radius:9px;font-size:9px;font-weight:850;margin-bottom:10px}@media(max-width:600px){.quality-grid-v37{grid-template-columns:1fr}}
+</style>'''
+    p=p.replace('</head>',css+'\n</head>',1)
+
+# Modal do checklist.
+if 'id="qualityGateModal"' not in p:
+    modal='''<!-- Modal Checklist de Qualidade v37 -->
+<div class="modal" id="qualityGateModal"><div class="modal-card" style="max-width:680px"><div class="modal-head"><h3>✅ Checklist de Qualidade</h3><button class="close-btn" onclick="closeModal('qualityGateModal')">×</button></div><div class="modal-body"><div class="quality-warning-v37">Antes de finalizar o pedido, confirme todos os itens abaixo.</div><div class="quality-grid-v37" id="qualityGateGrid"></div><div id="qualityGateError" style="display:none;color:#b91c1c;font-size:9px;font-weight:900;margin-top:8px">Marque todos os itens para finalizar.</div><div class="analysis-actions" style="margin-top:12px"><button class="big-btn advance-btn" id="qualityGateConfirm">✅ APROVAR E FINALIZAR</button><button class="big-btn secondary-btn" type="button" onclick="closeModal('qualityGateModal')">CANCELAR</button></div></div></div></div>
+'''
+    p=p.replace('<!-- Modal imagem -->',modal+'<!-- Modal imagem -->',1)
+
+# normalizeOrder campos.
+if 'p.prioridade' not in p[p.find('function normalizeOrder'):p.find('function dbToOrder')]:
+    anchor='''  if(typeof p.ehReenvio!=="boolean")p.ehReenvio=false;
+  p.reenvioId=p.reenvioId||null;'''
+    repl='''  if(typeof p.ehReenvio!=="boolean")p.ehReenvio=false;
+  p.reenvioId=p.reenvioId||null;
+  if(!p.prioridade)p.prioridade="Normal";
+  if(!Array.isArray(p.etiquetas))p.etiquetas=[];
+  if(!p.qualidadeChecklist||typeof p.qualidadeChecklist!=="object")p.qualidadeChecklist={};
+  p.qualidadeAprovado=!!p.qualidadeAprovado;
+  p.responsavelAtual=p.responsavelAtual||null;
+  p.observacaoFixada=p.observacaoFixada||"";
+  p.estoqueBaixado=!!p.estoqueBaixado;
+  p.expedicaoStatus=p.expedicaoStatus||"Aguardando produção";'''
+    if anchor not in p: raise SystemExit('normalizeOrder anchor não encontrado')
