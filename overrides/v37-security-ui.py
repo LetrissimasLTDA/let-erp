@@ -112,3 +112,9 @@ for html in site.glob('*.html'):
 
 with (site/'painel_producao.html').open('a',encoding='utf-8') as f:
     f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite | v37.4-ficha-cor-texto -->\n')
+
+# v37.5: somente menu agrupado, favoritos e barra superior compacta.
+patch=Path('overrides/v37-5-menu-favorites-compact.py')
+if not patch.exists():
+    raise SystemExit('Patch v37.5 não encontrado.')
+exec(compile(patch.read_text(encoding='utf-8'),'overrides/v37-5-menu-favorites-compact.py','exec'))
