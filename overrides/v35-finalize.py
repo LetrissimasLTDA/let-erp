@@ -1,5 +1,5 @@
 from pathlib import Path
-import shutil, re
+import shutil, re, base64, zipfile, io
 
 site=Path('_site')
 old='20260817-v35-reenvios-limpeza'
@@ -91,3 +91,24 @@ panel=site/'painel_producao.html'
 pls=panel.read_text(encoding='utf-8')
 if 'theme.js?v=20260817-v35-final-svg' not in pls:
     panel.write_text(pls+'\n<!-- compat-cache: theme.js?v=20260817-v35-final-svg -->\n',encoding='utf-8')
+
+# ============================================================
+# v37: suíte integrada da fábrica.
+# O pacote é texto/base64 para evitar corrupção de múltiplos arquivos no conector.
+# ============================================================
+bundle=Path('overrides/v37-bundle.b64')
+if not bundle.exists():
+    raise SystemExit('Pacote da suíte v37 não encontrado.')
+try:
+    raw=base64.b64decode(bundle.read_text(encoding='utf-8').strip(), validate=True)
+    with zipfile.ZipFile(io.BytesIO(raw)) as z:
+        required={'factory-suite.js','kanban.html','alertas.html','produtividade.html','gestao_producao.html','permissoes.html','expedicao.html','pedido.html','tv_setor.html','tv_geral.html','v37-suite.py'}
+        names=set(z.namelist())
+        missing=required-names
+        if missing:
+            raise SystemExit('Pacote v37 incompleto: '+', '.join(sorted(missing)))
+        z.extractall('overrides')
+except Exception as exc:
+    raise SystemExit('Falha ao reconstruir pacote v37: '+str(exc))
+
+exec(compile(Path('overrides/v37-suite.py').read_text(encoding='utf-8'),'overrides/v37-suite.py','exec'))
