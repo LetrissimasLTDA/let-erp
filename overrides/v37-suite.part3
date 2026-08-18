@@ -1,0 +1,110 @@
+  const checks=[...document.querySelectorAll('[data-qv37]')];if(!checks.every(c=>c.checked)){document.getElementById("qualityGateError").style.display="block";return;}
+  const checklist={};checks.forEach(c=>checklist[c.dataset.qv37]=true);const id=qualityGateOrderId;const after=qualityGateAfter;
+  updateOrder(id,o=>{o.qualidadeChecklist=checklist;o.qualidadeAprovado=true;o.qualidadeAprovadoPor=window.LET_ERP_CURRENT_PROFILE?.id||null;o.qualidadeAprovadoEm=new Date().toISOString();});
+  closeModal("qualityGateModal");qualityGateOrderId=null;qualityGateAfter=null;if(after)after();
+});
+
+'''
+    if marker not in p: raise SystemExit('Marcador finalizar não encontrado')
+    p=p.replace(marker,js+marker,1)
+
+# Substitui finalizarPedido por gate.
+start=p.find('function finalizarPedido(encodedId){')
+end=p.find('\n}\n\n/* 9 - análise',start)
+if start<0 or end<0: raise SystemExit('finalizarPedido não encontrado')
+p=p[:start]+'''function finalizarPedido(encodedId){
+  const id=decodeURIComponent(encodedId);const o=getOrder(id);if(!o)return;
+  openQualityGate(id,()=>completeOrderV37(id,false));
+}'''+p[end+2:]
+
+# Finalizar produção pelo modal de análise também passa no checklist.
+pat=r'''document\.getElementById\("finishProductionBtn"\)\.addEventListener\("click",\(\)=>\{[\s\S]*?\n\}\);\ndocument\.getElementById\("advanceBtn"\)'''
+m=re.search(pat,p)
+if not m: raise SystemExit('finishProductionBtn handler não encontrado')
+replacement='''document.getElementById("finishProductionBtn").addEventListener("click",()=>{
+  const o=getOrder(analysisOrderId);if(!o||o.finalizado||o.entregueMarketplace)return;
+  openQualityGate(analysisOrderId,()=>{completeOrderV37(analysisOrderId,false);renderAnalysis();});
+});
+document.getElementById("advanceBtn")'''
+p=p[:m.start()]+replacement+p[m.end():]
+
+# No último estágio, avanço abre checklist; nos demais apenas avança.
+pat=r'''document\.getElementById\("advanceBtn"\)\.addEventListener\("click",\(\)=>\{[\s\S]*?\n\}\);\n\ndocument\.getElementById\("openRefugoBtn"\)'''
+m=re.search(pat,p)
+if not m: raise SystemExit('advanceBtn handler não encontrado')
+replacement='''document.getElementById("advanceBtn").addEventListener("click",()=>{
+  const o=getOrder(analysisOrderId);if(!o||o.entregueMarketplace||o.finalizado)return;
+  if(o.etapaAtual>=STAGES.length-1){openQualityGate(analysisOrderId,()=>{completeOrderV37(analysisOrderId,true);renderAnalysis();});return;}
+  updateOrder(analysisOrderId,x=>{x.etapaAtual++;x.status="Em produção";x.qualidadeAprovado=false;x.qualidadeChecklist={};});renderAnalysis();
+});
+
+document.getElementById("openRefugoBtn")'''
+p=p[:m.start()]+replacement+p[m.end():]
+
+# Versão.
+p=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37 • Supabase</div>',p,count=1)
+panel.write_text(p,encoding='utf-8')
+
+# ------------------------------------------------------------
+# Novo Pedido: prioridade no cadastro/edição.
+# ------------------------------------------------------------
+novo=site/'novo_pedido.html'
+n=novo.read_text(encoding='utf-8')
+if 'id="prioridade"' not in n:
+    marker='''      <div class="field">
+        <label>LOTE DE ENVIO</label>'''
+    field='''      <div class="field">
+        <label>PRIORIDADE</label>
+        <select name="prioridade" id="prioridade"><option>Normal</option><option>Urgente</option><option>Crítico</option></select>
+      </div>
+
+'''+marker
+    if marker not in n: raise SystemExit('Campo lote no Novo Pedido não encontrado')
+    n=n.replace(marker,field,1)
+    n=n.replace('setSelectValue("marketplace",pedido.marketplace||"");','setSelectValue("marketplace",pedido.marketplace||"");\n    setSelectValue("prioridade",pedido.prioridade||"Normal");',1)
+    n=n.replace('marketplace,\n        lote:String(fd.get("lote")||""),','marketplace,\n        prioridade:String(fd.get("prioridade")||pedidoOriginal.prioridade||"Normal"),\n        lote:String(fd.get("lote")||""),',1)
+    n=n.replace('marketplace:p.marketplace||null,lote:p.lote||null,espessura:p.espessura||null,','marketplace:p.marketplace||null,prioridade:p.prioridade||"Normal",lote:p.lote||null,espessura:p.espessura||null,',1)
+novo.write_text(n,encoding='utf-8')
+
+# ------------------------------------------------------------
+# Atividades: novos módulos no histórico global.
+# ------------------------------------------------------------
+act=site/'atividades.html'
+a=act.read_text(encoding='utf-8')
+if 'pedido_comentarios' not in a:
+    a=a.replace('<option value="perfis">Perfis</option>','<option value="pedido_comentarios">Comentários</option><option value="pedido_arquivos">Arquivos do Pedido</option><option value="pedido_estoque_itens">Estoque por Pedido</option><option value="erp_permissoes">Permissões</option><option value="metas_fabrica">Metas</option><option value="perfis">Perfis</option>',1)
+    a=a.replace('perfis:"Perfis"','pedido_comentarios:"Comentários",pedido_arquivos:"Arquivos do Pedido",pedido_estoque_itens:"Estoque por Pedido",erp_permissoes:"Permissões",metas_fabrica:"Metas",perfis:"Perfis"',1)
+act.write_text(a,encoding='utf-8')
+
+# ------------------------------------------------------------
+# TV Hoje/Amanhã: prioridade + observação fixa se existirem.
+# ------------------------------------------------------------
+tv=site/'tv_producao.html'
+t=tv.read_text(encoding='utf-8')
+if 'PRIORIDADE TV V37' not in t:
+    t=t.replace('</style>','''/* PRIORIDADE TV V37 */\n.chip.priority-v37{background:#fef3c7;border-color:#fde68a;color:#92400e}.chip.critical-v37{background:#fee2e2;border-color:#fecaca;color:#991b1b}\n</style>''',1)
+    t=t.replace('''  const chips=[\n    p.marketplace?''','''  const chips=[\n    p.prioridade&&p.prioridade!=="Normal"?'<span class="chip '+(p.prioridade==="Crítico"?"critical-v37":"priority-v37")+'">'+(p.prioridade==="Crítico"?"🔥 ":"⚡ ")+esc(p.prioridade)+'</span>':'',\n    p.marketplace?''',1)
+    t=t.replace('''      '<div class="obs '+(!p.observacoes?'empty':'')+'"><small>OBSERVAÇÕES</small><div>'+esc(p.observacoes||'Sem observações para este pedido.')+'</div></div>'+''','''      '<div class="obs '+(!(p.observacao_fixada||p.observacoes)?'empty':'')+'"><small>OBSERVAÇÕES</small><div>'+esc(p.observacao_fixada||p.observacoes||'Sem observações para este pedido.')+'</div></div>'+''',1)
+tv.write_text(t,encoding='utf-8')
+
+# Cache dos compartilhados.
+cache='20260818-v37-factory-suite'
+for html in site.glob('*.html'):
+    text=html.read_text(encoding='utf-8')
+    text=re.sub(r'src="theme\.js(?:\?v=[^"]+)?"',f'src="theme.js?v={cache}"',text)
+    text=re.sub(r'src="supabase-config\.js(?:\?v=[^"]+)?"',f'src="supabase-config.js?v={cache}"',text)
+    html.write_text(text,encoding='utf-8')
+
+# Validações de presença.
+checks={
+ 'kanban.html':['Kanban de Produção','tv_setor.html'],
+ 'alertas.html':['Central de Alertas','notificacoes'],
+ 'pedido.html':['pedido_comentarios','pedido_arquivos','baixar_estoque_do_pedido','desfazer_ultima_acao_pedido'],
+ 'gestao_producao.html':['Mapa de gargalos','metas_fabrica','sla_etapas'],
+ 'painel_producao.html':['qualityGateModal','CENTRAL DO PEDIDO','prioridade:r.prioridade','versão 37'],
+ 'theme.js':['Kanban de Produção','Central de Alertas','hydratePermissionNavigation']
+}
+for fn,need in checks.items():
+    txt=(site/fn).read_text(encoding='utf-8')
+    for x in need:
+        if x not in txt: raise SystemExit(f'Validação v37 falhou: {fn} -> {x}')
