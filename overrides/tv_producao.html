@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#083344">
+<title>LET ERP • Modo TV</title>
+<style>
+:root{--aqua:#2dd4cf;--ink:#083344;--blue:#2563eb;--red:#e5242a;--orange:#f59e0b;--muted:#64748b;--paper:#f4f7f8;--line:#dbe5e8}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#061f2a;color:#0f172a;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}body{overflow:hidden}
+button{font:inherit}
+.tv-shell{height:100vh;min-height:540px;display:grid;grid-template-rows:auto 1fr auto;background:radial-gradient(circle at 20% 0%,rgba(45,212,207,.16),transparent 38%),linear-gradient(145deg,#061f2a,#0a3443)}
+.tv-top{display:flex;align-items:center;gap:18px;padding:16px 22px;border-bottom:1px solid rgba(255,255,255,.12);color:white;background:rgba(3,25,35,.72);backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:12px;min-width:250px}.brand-mark{width:46px;height:46px;border-radius:14px;background:var(--aqua);display:grid;place-items:center;color:var(--ink);font-size:25px;font-weight:1000;box-shadow:0 8px 30px rgba(45,212,207,.16)}.brand strong{display:block;font-size:18px;letter-spacing:.02em}.brand small{display:block;color:#a7f3d0;font-size:10px;font-weight:800;margin-top:2px;letter-spacing:.05em}
+.day-title{flex:1;text-align:center}.day-title .eyebrow{font-size:10px;font-weight:950;letter-spacing:.14em;color:#99f6e4}.day-title h1{font-size:clamp(22px,2.4vw,35px);margin:2px 0 0;line-height:1.04;letter-spacing:-.025em}.day-title p{margin:4px 0 0;color:#cbd5e1;font-size:11px;font-weight:800}
+.clock{min-width:250px;text-align:right}.clock b{display:block;font-size:clamp(22px,2.3vw,34px);line-height:1;font-variant-numeric:tabular-nums}.clock span{display:block;color:#99f6e4;font-size:10px;font-weight:850;margin-top:5px;text-transform:capitalize}
+.tv-stage{min-height:0;padding:20px 28px 16px;display:flex;align-items:stretch;justify-content:center}
+.slide{width:100%;max-width:1500px;height:100%;min-height:0;background:white;border-radius:25px;box-shadow:0 28px 80px rgba(0,0,0,.28);overflow:hidden;display:grid;grid-template-columns:minmax(340px,42%) 1fr;position:relative}
+.slide::before{content:"";position:absolute;left:0;right:0;top:0;height:7px;background:var(--accent,var(--aqua))}
+.logo-zone{min-height:0;background:linear-gradient(145deg,#ecfeff,#f8fafc);border-right:1px solid var(--line);padding:28px;display:flex;flex-direction:column;gap:15px;position:relative}
+.logo-box{flex:1;min-height:0;border:1px solid #d7e6e9;border-radius:21px;background:white;display:grid;place-items:center;overflow:hidden;padding:24px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7)}.logo-box img{max-width:100%;max-height:100%;object-fit:contain;display:block}.logo-placeholder{text-align:center;color:#94a3b8;font-weight:950;font-size:18px}.logo-placeholder span{display:block;font-size:46px;margin-bottom:8px}
+.slide-position{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#475569;font-size:10px;font-weight:900}.slide-position b{color:var(--ink);font-size:12px}
+.info-zone{min-width:0;padding:clamp(27px,3vw,50px);display:flex;flex-direction:column;justify-content:center;gap:clamp(17px,2.1vh,28px)}
+.order-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.order-id .label{font-size:11px;color:var(--muted);font-weight:950;letter-spacing:.1em}.order-id h2{margin:2px 0 0;font-size:clamp(38px,5.2vw,78px);line-height:.95;letter-spacing:-.045em;color:var(--ink)}.reenvio{display:inline-flex;align-items:center;gap:7px;background:#fef08a;color:#854d0e;border:1px solid #fde047;border-radius:999px;padding:8px 13px;font-size:11px;font-weight:1000;margin-top:10px}
+.deadline{text-align:right;flex:0 0 auto;background:#f0fdfa;border:1px solid #99f6e4;border-radius:17px;padding:12px 15px;min-width:165px}.deadline small{display:block;font-size:9px;font-weight:950;color:#0f766e;letter-spacing:.08em}.deadline b{display:block;color:var(--ink);font-size:22px;margin-top:2px}.deadline span{font-size:10px;font-weight:950;color:#0f766e}
+.client{font-size:clamp(28px,3.5vw,52px);font-weight:1000;line-height:1.02;letter-spacing:-.035em;overflow-wrap:anywhere}.chips{display:flex;flex-wrap:wrap;gap:9px}.chip{display:inline-flex;align-items:center;min-height:34px;border-radius:10px;padding:7px 12px;background:#f1f5f9;color:#334155;font-size:12px;font-weight:950;border:1px solid #e2e8f0}.chip.market{background:#ccfbf1;border-color:#99f6e4;color:#0f766e}.chip.lote{background:#e0f2fe;border-color:#bae6fd;color:#075985}
+.details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.detail{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fafcfd}.detail small{display:block;color:#64748b;font-size:9px;font-weight:950;letter-spacing:.06em}.detail b{display:block;margin-top:4px;color:#0f172a;font-size:15px;overflow-wrap:anywhere}
+.obs{border-left:6px solid var(--aqua);background:#f8fafc;border-radius:0 14px 14px 0;padding:13px 15px;min-height:58px}.obs small{display:block;color:#64748b;font-size:9px;font-weight:950;letter-spacing:.07em;margin-bottom:4px}.obs div{font-size:14px;line-height:1.35;font-weight:800;color:#334155;white-space:pre-wrap;overflow-wrap:anywhere}.obs.empty div{color:#94a3b8;font-weight:750}
+.empty-state{width:100%;max-width:1050px;height:100%;border-radius:25px;background:white;display:grid;place-items:center;text-align:center;padding:40px;box-shadow:0 28px 80px rgba(0,0,0,.24)}.empty-state .icon{width:92px;height:92px;border-radius:28px;background:#ecfeff;color:#0f766e;display:grid;place-items:center;font-size:46px;margin:0 auto 18px}.empty-state h2{margin:0;color:var(--ink);font-size:clamp(30px,4vw,52px)}.empty-state p{color:#64748b;font-size:15px;font-weight:750;margin:10px 0 0}
+.tv-bottom{padding:0 24px 18px;color:white}.progress-track{height:5px;background:rgba(255,255,255,.15);border-radius:999px;overflow:hidden}.progress-bar{height:100%;width:0;background:var(--aqua);border-radius:inherit}.progress-bar.running{animation:progress var(--duration,10s) linear forwards}@keyframes progress{from{width:0}to{width:100%}}
+.controls{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-top:10px}.controls-left,.controls-right{display:flex;align-items:center;gap:8px}.tv-btn{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:white;border-radius:10px;padding:8px 11px;font-size:10px;font-weight:950;cursor:pointer;transition:.14s}.tv-btn:hover{background:rgba(255,255,255,.16)}.tv-btn.active{background:var(--aqua);color:var(--ink);border-color:var(--aqua)}.tv-status{font-size:10px;color:#cbd5e1;font-weight:850}.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;margin-right:5px;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
+.refresh-flash{position:fixed;top:85px;left:50%;transform:translateX(-50%) translateY(-8px);opacity:0;pointer-events:none;background:#083344;color:white;border:1px solid #2dd4cf;border-radius:999px;padding:8px 13px;font-size:9px;font-weight:950;z-index:20;transition:.2s}.refresh-flash.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:900px){body{overflow:auto}.tv-shell{min-height:100vh;height:auto}.tv-top{flex-wrap:wrap}.brand,.clock{min-width:0}.day-title{order:3;flex-basis:100%}.slide{grid-template-columns:1fr;min-height:850px}.logo-zone{min-height:370px;border-right:0;border-bottom:1px solid var(--line)}.info-zone{justify-content:flex-start}.details{grid-template-columns:1fr 1fr}.tv-stage{min-height:900px}.controls{flex-wrap:wrap}.clock{margin-left:auto}}
+@media(max-width:560px){.tv-top{padding:12px}.brand small{display:none}.brand-mark{width:40px;height:40px}.tv-stage{padding:10px;min-height:950px}.slide{border-radius:18px}.logo-zone{padding:15px;min-height:330px}.info-zone{padding:22px 17px}.details{grid-template-columns:1fr}.order-row{display:block}.deadline{text-align:left;margin-top:12px}.controls-left,.controls-right{flex-wrap:wrap}.tv-bottom{padding:0 12px 12px}}
+:fullscreen .tv-shell{height:100vh}:fullscreen .tv-stage{padding:18px 24px 12px}
+</style>
+</head>
+<body>
+<div class="tv-shell">
+  <header class="tv-top">
+    <div class="brand"><div class="brand-mark">✦</div><div><strong>LET ERP</strong><small>PAINEL DE PRODUÇÃO • MODO TV</small></div></div>
+    <div class="day-title"><div class="eyebrow" id="dayEyebrow">PEDIDOS DE HOJE</div><h1 id="dayTitle">Carregando...</h1><p id="daySub">Saídas programadas • até 12:00</p></div>
+    <div class="clock"><b id="clock">--:--:--</b><span id="clockDate">--</span></div>
+  </header>
+
+  <main class="tv-stage" id="stage"><div class="empty-state"><div><div class="icon">⏳</div><h2>Carregando pedidos...</h2><p>Aguarde um instante.</p></div></div></main>
+
+  <footer class="tv-bottom">
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="controls">
+      <div class="controls-left">
+        <button class="tv-btn" id="todayBtn" type="button">HOJE</button>
+        <button class="tv-btn" id="tomorrowBtn" type="button">AMANHÃ</button>
+        <button class="tv-btn" id="prevBtn" type="button">‹ ANTERIOR</button>
+        <button class="tv-btn" id="nextBtn" type="button">PRÓXIMO ›</button>
+      </div>
+      <div class="tv-status"><span class="live-dot"></span><span id="liveText">Atualização em tempo real</span></div>
+      <div class="controls-right">
+        <button class="tv-btn" id="pauseBtn" type="button">⏸ PAUSAR</button>
+        <button class="tv-btn" id="fullscreenBtn" type="button">⛶ TELA CHEIA</button>
+        <button class="tv-btn" id="backBtn" type="button">← ERP</button>
+      </div>
+    </div>
+  </footer>
+</div>
+<div class="refresh-flash" id="refreshFlash">Fila atualizada</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=20260818-v36-tv"></script>
+<script>
+const db=window.letErpSupabase;
+const SLIDE_MS=10000;
+let mode=new URLSearchParams(location.search).get('dia')==='amanha'?'amanha':'hoje';
+let orders=[];
+let index=0;
+let paused=false;
+let timer=null;
+let channel=null;
+let wakeLock=null;
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+function dateKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function targetDate(){const d=new Date();if(mode==='amanha')d.setDate(d.getDate()+1);return d;}
+function targetKey(){return dateKey(targetDate());}
+function formatBR(v){if(!v)return '-';const p=String(v).split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:v;}
+function formatLong(d){return d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).replace(/^./,c=>c.toUpperCase());}
+function active(r){return !r.finalizado&&!r.entregue_marketplace&&r.status!=='Pronto'&&!r.atrasado;}
+function loteRank(v){const s=String(v||'').toLowerCase();if(s.includes('manh'))return 1;if(s.includes('meio')||s.includes('12'))return 2;if(s.includes('fim'))return 3;return 4;}
+function clean(v){return String(v||'').trim();}
+
+function updateClock(){const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('pt-BR');document.getElementById('clockDate').textContent=formatLong(d);}
+function updateHeader(){const d=targetDate();document.getElementById('dayEyebrow').textContent=mode==='amanha'?'PEDIDOS DE AMANHÃ':'PEDIDOS DE HOJE';document.getElementById('dayTitle').textContent=formatLong(d);document.getElementById('daySub').textContent=orders.length+' pedido'+(orders.length===1?'':'s')+' programado'+(orders.length===1?'':'s')+' • saída até 12:00';document.getElementById('todayBtn').classList.toggle('active',mode==='hoje');document.getElementById('tomorrowBtn').classList.toggle('active',mode==='amanha');}
+
+function slideHtml(p){
+  const accent=p.eh_reenvio?'#facc15':(mode==='hoje'?'#ef4444':'#f59e0b');
+  const logo=p.imagem?'<img src="'+esc(p.imagem)+'" alt="Logo do pedido '+esc(p.id)+'">':'<div class="logo-placeholder"><span>◫</span>LOGO NÃO ANEXADA</div>';
+  const reenvio=p.eh_reenvio?'<div class="reenvio">🔁 REENVIO</div>':'';
+  const chips=[
+    p.marketplace?'<span class="chip market">'+esc(p.marketplace)+'</span>':'',
+    p.lote?'<span class="chip lote">LOTE: '+esc(p.lote)+'</span>':'',
+    p.espessura?'<span class="chip">'+esc(p.espessura)+'</span>':'',
+    p.medidas?'<span class="chip">'+esc(p.medidas)+'</span>':'',
+    p.cor?'<span class="chip">'+esc(p.cor)+'</span>':''
+  ].join('');
+  const stage=['Máquina','Lixação','Montagem','Colagem','Pintura','Fitagem','Embalagem'][Number(p.etapa_atual)||0]||'Máquina';
+  const obs=clean(p.observacoes);
+  return '<section class="slide" style="--accent:'+accent+'">'+
+    '<div class="logo-zone"><div class="logo-box">'+logo+'</div><div class="slide-position"><span>FILA '+(mode==='amanha'?'DE AMANHÃ':'DE HOJE')+'</span><b>'+(index+1)+' / '+orders.length+'</b></div></div>'+
+    '<div class="info-zone">'+
+      '<div class="order-row"><div class="order-id"><div class="label">NÚMERO DO PEDIDO</div><h2>#'+esc(p.id)+'</h2>'+reenvio+'</div><div class="deadline"><small>SAÍDA DA FÁBRICA</small><b>'+formatBR(p.prazo)+'</b><span>ATÉ 12:00</span></div></div>'+
+      '<div class="client">'+esc(p.cliente||'Sem cliente informado')+'</div>'+
+      '<div class="chips">'+chips+'</div>'+
+      '<div class="details"><div class="detail"><small>ETAPA ATUAL</small><b>'+esc(stage)+'</b></div><div class="detail"><small>LOTE</small><b>'+esc(p.lote||'Não informado')+'</b></div><div class="detail"><small>MARKETPLACE</small><b>'+esc(p.marketplace||'Não informado')+'</b></div></div>'+
+      '<div class="obs '+(obs?'':'empty')+'"><small>OBSERVAÇÕES</small><div>'+(obs?esc(obs):'Nenhuma observação cadastrada para este pedido.')+'</div></div>'+
+    '</div></section>';
+}
+
+function render(){
+  updateHeader();
+  const stage=document.getElementById('stage');
+  if(!orders.length){
+    stage.innerHTML='<div class="empty-state"><div><div class="icon">✓</div><h2>Nenhum pedido para '+(mode==='amanha'?'amanhã':'hoje')+'</h2><p>Quando um pedido entrar nessa data, esta tela será atualizada automaticamente.</p></div></div>';
+    stopTimer();return;
+  }
+  if(index>=orders.length)index=0;
+  stage.innerHTML=slideHtml(orders[index]);
+  restartTimer();
+}
+
+async function loadOrders(showFlash=false){
+  const currentId=orders[index]?.id;
+  const {data,error}=await db.from('pedidos').select('*').eq('prazo',targetKey()).order('criado_em',{ascending:true});
+  if(error){document.getElementById('liveText').textContent='Erro ao atualizar fila';console.error(error);return;}
+  orders=(data||[]).filter(active).sort((a,b)=>loteRank(a.lote)-loteRank(b.lote)||String(a.criado_em||'').localeCompare(String(b.criado_em||''))||String(a.id).localeCompare(String(b.id)));
+  if(currentId){const newIndex=orders.findIndex(x=>String(x.id)===String(currentId));index=newIndex>=0?newIndex:Math.min(index,Math.max(0,orders.length-1));}else index=Math.min(index,Math.max(0,orders.length-1));
+  render();
+  if(showFlash){const f=document.getElementById('refreshFlash');f.classList.add('show');setTimeout(()=>f.classList.remove('show'),1300);}
+}
+
+function stopTimer(){if(timer){clearTimeout(timer);timer=null;}const bar=document.getElementById('progressBar');bar.classList.remove('running');bar.style.width='0';}
+function restartTimer(){stopTimer();const bar=document.getElementById('progressBar');bar.style.setProperty('--duration',(SLIDE_MS/1000)+'s');if(paused||orders.length<=1)return;void bar.offsetWidth;bar.classList.add('running');timer=setTimeout(()=>go(1),SLIDE_MS);}
+function go(delta){if(!orders.length)return;index=(index+delta+orders.length)%orders.length;render();}
+function switchMode(next){mode=next;index=0;const u=new URL(location.href);u.searchParams.set('dia',mode);history.replaceState(null,'',u);loadOrders();}
+
+async function toggleFullscreen(){try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen();document.getElementById('fullscreenBtn').textContent='⤡ SAIR DA TELA CHEIA';requestWakeLock();}else{await document.exitFullscreen();}}catch(e){console.warn(e)}}
+async function requestWakeLock(){try{if('wakeLock'in navigator)wakeLock=await navigator.wakeLock.request('screen');}catch(e){}}
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement)document.getElementById('fullscreenBtn').textContent='⛶ TELA CHEIA';});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&document.fullscreenElement)requestWakeLock();});
+
+document.getElementById('todayBtn').onclick=()=>switchMode('hoje');
+document.getElementById('tomorrowBtn').onclick=()=>switchMode('amanha');
+document.getElementById('prevBtn').onclick=()=>go(-1);
+document.getElementById('nextBtn').onclick=()=>go(1);
+document.getElementById('pauseBtn').onclick=()=>{paused=!paused;document.getElementById('pauseBtn').textContent=paused?'▶ CONTINUAR':'⏸ PAUSAR';render();};
+document.getElementById('fullscreenBtn').onclick=toggleFullscreen;
+document.getElementById('backBtn').onclick=()=>location.href='painel_producao.html';
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')go(1);if(e.key==='ArrowLeft')go(-1);if(e.key===' '){e.preventDefault();document.getElementById('pauseBtn').click();}if(e.key.toLowerCase()==='f')toggleFullscreen();});
+
+(async()=>{
+  const session=await letErpRequireAuth();if(!session)return;
+  updateClock();setInterval(updateClock,1000);
+  await loadOrders();
+  channel=db.channel('tv-producao-live').on('postgres_changes',{event:'*',schema:'public',table:'pedidos'},()=>loadOrders(true)).subscribe();
+})();
+</script>
+</body>
+</html>
