@@ -60,24 +60,20 @@ css_patch = r'''
 }
 '''
 if 'v36.4 - Developer badge legível' not in s:
-    # Insere o CSS antes do fechamento do bloco de estilo criado pelo theme.js.
     marker='    /* login não possui topbar */'
     if marker in s:
         s=s.replace(marker,css_patch+'\n'+marker,1)
     else:
-        # fallback: injeta no começo do template CSS global
         marker2='  const style=document.createElement("style");'
         if marker2 not in s:
             raise SystemExit('Não foi possível localizar o CSS global do theme.js')
         s=s.replace(marker2,marker2+'\n  style.textContent += `'+css_patch.replace('`','\\`')+'`;\n',1)
 
-# Garante texto exatamente </> na badge do drawer e do chat.
 s=s.replace('badgeCode.textContent="</>";','badgeCode.textContent="</>";',1)
 s=s.replace('&lt;/&gt;','&lt;/&gt;')
 
 theme.write_text(s,encoding='utf-8')
 
-# Meu Perfil: mesma identidade visual, maior.
 profile=site/'perfil.html'
 p=profile.read_text(encoding='utf-8')
 profile_css=r'''
@@ -110,7 +106,6 @@ profile_css=r'''
 if 'developerBadgeV364' not in p:
     p=p.replace('</head>',profile_css+'\n</head>',1)
 
-# Troca qualquer conteúdo visual antigo do span da badge do perfil por badge em CSS/texto.
 pattern=r'(<span[^>]*id="profileDeveloperBadge"[^>]*>)[\s\S]*?(</span>)'
 m=re.search(pattern,p)
 if m:
@@ -119,7 +114,6 @@ if m:
 
 profile.write_text(p,encoding='utf-8')
 
-# Cache/versionamento.
 cache='20260818-v36-4-developer-badge'
 for html in site.glob('*.html'):
     text=html.read_text(encoding='utf-8')
@@ -131,3 +125,6 @@ panel=site/'painel_producao.html'
 pt=panel.read_text(encoding='utf-8')
 pt=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 36.4 • Supabase</div>',pt,count=1)
 panel.write_text(pt,encoding='utf-8')
+
+# v36.5: centraliza o conteúdo do Dashboard TV.
+exec(compile(Path('overrides/v36-5-tv-center.py').read_text(encoding='utf-8'),'overrides/v36-5-tv-center.py','exec'))
