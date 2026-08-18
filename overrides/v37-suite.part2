@@ -1,0 +1,108 @@
+    p=p.replace(anchor,repl,1)
+
+# dbToOrder: injeta campos depois de reenvio.
+if 'prioridade:r.prioridade' not in p:
+    old='''    ehReenvio:!!r.eh_reenvio,reenvioId:r.reenvio_id||null,
+    criadoEm:r.criado_em,atualizadoEm:r.atualizado_em'''
+    new='''    ehReenvio:!!r.eh_reenvio,reenvioId:r.reenvio_id||null,
+    prioridade:r.prioridade||"Normal",responsavelAtual:r.responsavel_atual||null,observacaoFixada:r.observacao_fixada||"",etiquetas:r.etiquetas||[],
+    qualidadeChecklist:r.qualidade_checklist||{},qualidadeAprovado:!!r.qualidade_aprovado,qualidadeAprovadoPor:r.qualidade_aprovado_por||null,qualidadeAprovadoEm:r.qualidade_aprovado_em||null,
+    estoqueBaixado:!!r.estoque_baixado,estoqueBaixadoEm:r.estoque_baixado_em||null,etapaIniciadaEm:r.etapa_iniciada_em||null,
+    expedicaoStatus:r.expedicao_status||"Aguardando produção",transportadora:r.transportadora||"",codigoRastreio:r.codigo_rastreio||"",
+    criadoEm:r.criado_em,atualizadoEm:r.atualizado_em'''
+    if old not in p: raise SystemExit('dbToOrder anchor não encontrado')
+    p=p.replace(old,new,1)
+
+# orderToDb campos.
+if 'prioridade:p.prioridade' not in p:
+    old='''    eh_reenvio:!!p.ehReenvio,reenvio_id:p.reenvioId||null,
+    criado_em:p.criadoEm||new Date().toISOString()'''
+    new='''    eh_reenvio:!!p.ehReenvio,reenvio_id:p.reenvioId||null,
+    prioridade:p.prioridade||"Normal",responsavel_atual:p.responsavelAtual||null,observacao_fixada:p.observacaoFixada||null,etiquetas:p.etiquetas||[],
+    qualidade_checklist:p.qualidadeChecklist||{},qualidade_aprovado:!!p.qualidadeAprovado,qualidade_aprovado_por:p.qualidadeAprovadoPor||null,qualidade_aprovado_em:p.qualidadeAprovadoEm||null,
+    estoque_baixado:!!p.estoqueBaixado,estoque_baixado_em:p.estoqueBaixadoEm||null,
+    expedicao_status:p.expedicaoStatus||"Aguardando produção",transportadora:p.transportadora||null,codigo_rastreio:p.codigoRastreio||null,
+    criado_em:p.criadoEm||new Date().toISOString()'''
+    if old not in p: raise SystemExit('orderToDb anchor não encontrado')
+    p=p.replace(old,new,1)
+
+# Helpers de prioridade/tags.
+if 'function priorityTag(p)' not in p:
+    marker='''function cardStatus(p){'''
+    helper='''function priorityTag(p){
+  if(p.prioridade==="Crítico")return '<span class="priority-tag critical">🔥 CRÍTICO</span>';
+  if(p.prioridade==="Urgente")return '<span class="priority-tag urgent">⚡ URGENTE</span>';
+  return '';
+}
+function customTagsHtml(p){
+  const tags=Array.isArray(p.etiquetas)?p.etiquetas:[];
+  return tags.length?'<div class="custom-tags">'+tags.slice(0,4).map(t=>'<span>'+escapeHtml(t)+'</span>').join('')+'</div>':'';
+}
+function pinnedNoteHtml(p){return p.observacaoFixada?'<div class="pinned-order-note">📌 '+escapeHtml(p.observacaoFixada)+'</div>':'';}
+
+'''
+    if marker not in p: raise SystemExit('cardStatus não encontrado')
+    p=p.replace(marker,helper+marker,1)
+
+# Menu 3 pontinhos: central do pedido.
+if 'CENTRAL DO PEDIDO' not in p:
+    old='''  const mkt=
+    '<button class="mkt-option" onclick="closeAllMoreMenus();openMktMaterial(\\''+id+'\\')">MATERIAL MKT</button>';
+
+  return '<div class="more-wrap">'+'''
+    new='''  const mkt=
+    '<button class="mkt-option" onclick="closeAllMoreMenus();openMktMaterial(\\''+id+'\\')">MATERIAL MKT</button>';
+  const central=
+    '<button onclick="closeAllMoreMenus();location.href=\\'pedido.html?id='+id+'\\'">CENTRAL DO PEDIDO</button>';
+
+  return '<div class="more-wrap">'+'''
+    if old not in p:
+        old='''  const mkt=
+    '<button class="mkt-option" onclick="closeAllMoreMenus();openMktMaterial(\''+id+'\')">MATERIAL MKT</button>';
+
+  return '<div class="more-wrap">'+'''
+        new='''  const mkt=
+    '<button class="mkt-option" onclick="closeAllMoreMenus();openMktMaterial(\''+id+'\')">MATERIAL MKT</button>';
+  const central=
+    '<button onclick="closeAllMoreMenus();location.href=\'pedido.html?id='+id+'\'">CENTRAL DO PEDIDO</button>';
+
+  return '<div class="more-wrap">'+'''
+    if old not in p: raise SystemExit('Material MKT no moreActions não encontrado')
+    p=p.replace(old,new,1)
+    p=p.replace('analyze+delay+ml+mkt+','analyze+delay+ml+mkt+central+',1)
+
+# Cards: prioridade, tags e observação fixada.
+p=p.replace("'<div class=\"order\">PEDIDO #'+escapeHtml(p.id||\"-\")+reenvioTag(p)+'</div>'+", "'<div class=\"order\">PEDIDO #'+escapeHtml(p.id||\"-\")+reenvioTag(p)+priorityTag(p)+'</div>'+",1)
+p=p.replace("      '<div class=\"meta\">'+chips+'</div>'+\n      obs+", "      '<div class=\"meta\">'+chips+'</div>'+\n      customTagsHtml(p)+pinnedNoteHtml(p)+\n      obs+",1)
+p=p.replace("'<strong>Pedido #'+escapeHtml(p.id)+' • '+escapeHtml(p.cliente||\"Sem cliente\")+'</strong>'+reenvioTag(p)+", "'<strong>Pedido #'+escapeHtml(p.id)+' • '+escapeHtml(p.cliente||\"Sem cliente\")+'</strong>'+reenvioTag(p)+priorityTag(p)+",1)
+
+# Ordenação: prioridade antes do prazo.
+p=p.replace('const orders=loadOrders().map(normalizeOrder).sort((a,b)=>String(a.prazo||"").localeCompare(String(b.prazo||"")));','const orders=loadOrders().map(normalizeOrder).sort((a,b)=>(a.prioridade==="Crítico"?0:a.prioridade==="Urgente"?1:2)-(b.prioridade==="Crítico"?0:b.prioridade==="Urgente"?1:2)||String(a.prazo||"").localeCompare(String(b.prazo||"")));',1)
+
+# Responsável atual recebe o usuário logado quando inicia/retoma.
+if 'o.responsavelAtual=window.LET_ERP_CURRENT_PROFILE' not in p:
+    anchor='''    o.producaoOperadorAtual=nome;
+    o.producaoStatus="em_andamento";'''
+    repl='''    o.producaoOperadorAtual=nome;
+    o.responsavelAtual=window.LET_ERP_CURRENT_PROFILE?.id||o.responsavelAtual||null;
+    o.producaoStatus="em_andamento";'''
+    if anchor not in p: raise SystemExit('Início da produção não encontrado')
+    p=p.replace(anchor,repl,1)
+
+# Gate de qualidade e finalização centralizada.
+if 'const QUALITY_ITEMS_V37' not in p:
+    marker='''/* 6 - finalizar */'''
+    js='''const QUALITY_ITEMS_V37={medidas:"Medidas conferidas",cor:"Cor correta",espessura:"Espessura correta",acabamento:"Acabamento aprovado",pecas:"Peças completas",pintura:"Pintura aprovada",embalagem:"Embalagem conferida",foto:"Foto final conferida"};
+let qualityGateOrderId=null,qualityGateAfter=null;
+function openQualityGate(id,after){
+  const o=getOrder(id);if(!o)return;
+  qualityGateOrderId=id;qualityGateAfter=after;
+  const state=o.qualidadeChecklist||{};
+  document.getElementById("qualityGateGrid").innerHTML=Object.entries(QUALITY_ITEMS_V37).map(([k,label])=>'<label><input type="checkbox" data-qv37="'+k+'" '+(state[k]?'checked':'')+'> '+escapeHtml(label)+'</label>').join("");
+  document.getElementById("qualityGateError").style.display="none";openModal("qualityGateModal");
+}
+function completeOrderV37(id,delivered){
+  updateOrder(id,o=>{const now=new Date().toISOString();if(o.producaoStatus==="em_andamento"&&o.producaoInicioAtual)o.producaoSegundosAcumulados=(Number(o.producaoSegundosAcumulados)||0)+Math.max(0,Math.floor((Date.now()-new Date(o.producaoInicioAtual).getTime())/1000));o.producaoInicioAtual=null;o.producaoStatus="finalizado";if(!Array.isArray(o.producaoHistorico))o.producaoHistorico=[];o.producaoHistorico.push({tipo:"producao",acao:"finalizado",data:now,etapa:STAGES[Math.min(o.etapaAtual||0,STAGES.length-1)],operador:(o.producaoOperadorAtual||"").trim(),tempoTotal:Number(o.producaoSegundosAcumulados)||0});o.finalizado=true;o.finalizadoEm=now;o.status="Pronto";if(delivered)o.entregueMarketplace=true;if(!o.expedicaoStatus||o.expedicaoStatus==="Aguardando produção")o.expedicaoStatus="Aguardando coleta";});
+  showNotice("✓ Pedido #"+id+" aprovado na qualidade e marcado como PRONTO.");refreshActiveModal();
+}
+document.getElementById("qualityGateConfirm").addEventListener("click",()=>{
