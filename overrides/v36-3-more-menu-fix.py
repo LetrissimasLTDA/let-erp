@@ -128,3 +128,6 @@ final=panel.read_text(encoding='utf-8')
 for required in ['let-erp-more-portal','2147483000','moreMenuPortalFixScript','versão 36.3']:
     if required not in final:
         raise SystemExit('Correção do menu incompleta: '+required)
+
+# v36.4: melhora definitiva da apresentação da badge Developer.
+exec(compile(Path('overrides/v36-4-badge-fix.py').read_text(encoding='utf-8'),'overrides/v36-4-badge-fix.py','exec'))
