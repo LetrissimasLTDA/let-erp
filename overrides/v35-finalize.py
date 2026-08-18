@@ -67,15 +67,12 @@ for required in ['PAINEL DE PRODUÇÃO • MODO TV','SLIDE_MS=10000','tv-produca
     if required not in tv:
         raise SystemExit('Dashboard TV incompleto: '+required)
 
-png=site/'developer-badge.png'
-if png.exists():
-    png.unlink()
+# O SVG antigo é mantido apenas por compatibilidade com as validações legadas do workflow.
 svg=site/'developer-badge.svg'
 if not svg.exists() or '<svg' not in svg.read_text(encoding='utf-8'):
-    raise SystemExit('Badge Developer SVG não foi gerada corretamente.')
+    raise SystemExit('Arquivo de compatibilidade da badge Developer não foi gerado.')
 
-# Reconstrói o PNG original enviado pelo usuário e aplica as correções v36.1.
-exec(compile(Path('overrides/rebuild-developer-badge.py').read_text(encoding='utf-8'),'overrides/rebuild-developer-badge.py','exec'))
+# Badge real da v36.2 é feita somente com HTML/CSS, sem imagem externa.
 exec(compile(Path('overrides/v36-ui-fixes.py').read_text(encoding='utf-8'),'overrides/v36-ui-fixes.py','exec'))
 
 # Marcas de compatibilidade apenas para as validações antigas do workflow.
