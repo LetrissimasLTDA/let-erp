@@ -3,10 +3,12 @@ name: Deploy LET ERP to GitHub Pages
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - DEPLOYED.txt
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -180,6 +182,7 @@ jobs:
           grep -q 'MODO TV' _site/tv_setor.html
           grep -q 'PAINEL GERAL' _site/tv_geral.html
           grep -q '20260818-v37-factory-suite' _site/painel_producao.html
+          grep -q 'v37-role-permissions-enforced' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -194,3 +197,15 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Record successful deployment
+        if: success()
+        shell: bash
+        run: |
+          printf 'commit=%s\nversion=37\ndeployed_at=%s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > DEPLOYED.txt
+          git config user.name 'LET ERP Deploy Bot'
+          git config user.email 'actions@github.com'
+          git add DEPLOYED.txt
+          git commit -m "chore: registra deploy concluído [skip deploy]" || exit 0
+          git pull --rebase origin main
+          git push origin HEAD:main
