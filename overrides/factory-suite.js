@@ -1,0 +1,12 @@
+window.ERP_STAGES=["Máquina","Lixação","Montagem","Colagem","Pintura","Fitagem","Embalagem"];
+window.erpEsc=function(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]))};
+window.erpDateKey=function(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+window.erpBr=function(v){if(!v)return"-";const p=String(v).split("-");return p.length===3?p[2]+"/"+p[1]+"/"+p[0]:v};
+window.erpFmtDuration=function(sec){sec=Math.max(0,Math.floor(Number(sec)||0));const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")};
+window.erpPriorityRank=function(v){return v==="Crítico"?0:v==="Urgente"?1:2};
+window.erpPriorityChip=function(v){const c=v==="Crítico"?"red":v==="Urgente"?"yellow":"aqua";return '<span class="chip '+c+'">'+erpEsc(v||"Normal")+'</span>'};
+window.erpShowNotice=function(text,error=false){const n=document.getElementById("notice");if(!n)return;n.className="notice show "+(error?"err":"ok");n.textContent=text;setTimeout(()=>{n.classList.remove("show")},4500)};
+window.erpGetPermissions=async function(){if(window.LET_ERP_PERMISSIONS)return window.LET_ERP_PERMISSIONS;const {data:s}=await letErpSupabase.auth.getSession();const uid=s?.session?.user?.id;if(!uid)return{};const {data}=await letErpSupabase.from("erp_permissoes").select("funcao,permissoes").eq("user_id",uid).maybeSingle();window.LET_ERP_ROLE=data?.funcao||"Produção";window.LET_ERP_PERMISSIONS=data?.permissoes||{};return window.LET_ERP_PERMISSIONS};
+window.erpHas=async function(key){const p=await erpGetPermissions();return !!p[key]};
+window.erpRequire=async function(key){const session=await letErpRequireAuth();if(!session)return false;if(key&&!(await erpHas(key))){document.body.innerHTML='<div style="font-family:Arial;padding:40px;text-align:center"><h2>Sem permissão</h2><p>Seu perfil não possui permissão para acessar este módulo.</p><a href="painel_producao.html">Voltar ao painel</a></div>';return false}return true};
+window.erpProfileMap=async function(){const {data}=await letErpSupabase.from("perfis").select("id,nome,setor,email,foto_url");return Object.fromEntries((data||[]).map(p=>[p.id,p]))};
