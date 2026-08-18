@@ -24,6 +24,15 @@ add_perm('programacoes.html','gestao')
 add_perm('estoque.html','estoque_gerenciar')
 add_perm('atividades.html','gestao')
 
+# v37.1: remove do menu os três módulos marcados pelo usuário.
+# As páginas permanecem no pacote por compatibilidade/histórico, mas não aparecem na navegação.
+for href in ('alertas.html','produtividade.html','gestao_producao.html'):
+    s=re.sub(r'\n?\s*\{href:"'+re.escape(href)+r'"[^\n]*\},?', '', s)
+
+for href in ('alertas.html','produtividade.html','gestao_producao.html'):
+    if 'href:"'+href+'"' in s:
+        raise SystemExit('Não foi possível remover do menu: '+href)
+
 theme.write_text(s,encoding='utf-8')
 
 # ------------------------------------------------------------
@@ -86,16 +95,19 @@ if 'v37-permission-ui' not in pp:
 </script>
 '''
     pp=pp.replace('</body>',snippet+'\n</body>',1)
+
+# Atualiza a versão exibida.
+pp=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.1 • Supabase</div>',pp,count=1)
 panel.write_text(pp,encoding='utf-8')
 
-# Cache final da segurança v37.
-cache='20260818-v37-factory-suite-secure'
+# Cache final da segurança v37.1.
+cache='20260818-v37-1-menu-cleanup'
 for html in site.glob('*.html'):
     text=html.read_text(encoding='utf-8')
     text=re.sub(r'src="theme\.js(?:\?v=[^"]+)?"',f'src="theme.js?v={cache}"',text)
     text=re.sub(r'src="supabase-config\.js(?:\?v=[^"]+)?"',f'src="supabase-config.js?v={cache}"',text)
     html.write_text(text,encoding='utf-8')
 
-# Marcas para validação do deploy. A segunda mantém compatibilidade com o grep v37 anterior.
+# Marcas para validação do deploy. Mantém compatibilidade com greps antigos.
 with (site/'painel_producao.html').open('a',encoding='utf-8') as f:
     f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite -->\n')
