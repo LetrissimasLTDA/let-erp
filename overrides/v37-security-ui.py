@@ -100,10 +100,10 @@ if 'v37-permission-ui' not in pp:
 '''
     pp=pp.replace('</body>',snippet+'\n</body>',1)
 
-pp=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.3 • Supabase</div>',pp,count=1)
+pp=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.4 • Supabase</div>',pp,count=1)
 panel.write_text(pp,encoding='utf-8')
 
-cache='20260818-v37-3-ficha-modelo'
+cache='20260818-v37-4-ficha-cor-texto'
 for html in site.glob('*.html'):
     text=html.read_text(encoding='utf-8')
     text=re.sub(r'src="theme\.js(?:\?v=[^"]+)?"',f'src="theme.js?v={cache}"',text)
@@ -111,4 +111,4 @@ for html in site.glob('*.html'):
     html.write_text(text,encoding='utf-8')
 
 with (site/'painel_producao.html').open('a',encoding='utf-8') as f:
-    f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite | v37.3-ficha-modelo -->\n')
+    f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite | v37.4-ficha-cor-texto -->\n')
