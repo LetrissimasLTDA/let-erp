@@ -75,6 +75,9 @@ if not svg.exists() or '<svg' not in svg.read_text(encoding='utf-8'):
 # Badge real da v36.2 é feita somente com HTML/CSS, sem imagem externa.
 exec(compile(Path('overrides/v36-ui-fixes.py').read_text(encoding='utf-8'),'overrides/v36-ui-fixes.py','exec'))
 
+# Correção v36.3: menu dos 3 pontinhos sempre acima dos modais/pesquisa.
+exec(compile(Path('overrides/v36-3-more-menu-fix.py').read_text(encoding='utf-8'),'overrides/v36-3-more-menu-fix.py','exec'))
+
 # Marcas de compatibilidade apenas para as validações antigas do workflow.
 theme=site/'theme.js'
 ts=theme.read_text(encoding='utf-8')
