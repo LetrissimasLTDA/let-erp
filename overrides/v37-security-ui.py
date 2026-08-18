@@ -112,15 +112,3 @@ for html in site.glob('*.html'):
 
 with (site/'painel_producao.html').open('a',encoding='utf-8') as f:
     f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite | v37.4-ficha-cor-texto -->\n')
-
-# v38: navegação, favoritos, busca global, breadcrumbs, voltar inteligente e topbar compacta.
-v38=Path('overrides/v38-navigation-patch.py')
-if not v38.exists():
-    raise SystemExit('Patch de navegação v38 não encontrado.')
-exec(compile(v38.read_text(encoding='utf-8'),'overrides/v38-navigation-patch.py','exec'))
-
-# Compatibilidade invisível para as validações legadas do workflow.
-v38_compat=Path('overrides/v38-compat.py')
-if not v38_compat.exists():
-    raise SystemExit('Compatibilidade v38 não encontrada.')
-exec(compile(v38_compat.read_text(encoding='utf-8'),'overrides/v38-compat.py','exec'))
