@@ -1,23 +1,9 @@
-commit=92f8fc36e54e6c50d86dd606508ead62b0a6b352
-version=37
-failed_at=2026-08-18T19:34:21Z
---- files ---
-painel_producao.html=present
-theme.js=present
-factory-suite.js=present
-kanban.html=present
-alertas.html=present
-produtividade.html=present
-gestao_producao.html=present
-permissoes.html=present
-expedicao.html=present
-pedido.html=present
-tv_setor.html=present
-tv_geral.html=present
-tv_producao.html=present
---- markers ---
-panel_v37=yes
-quality_gate=yes
-central_order=yes
-permissions_nav=yes
---- syntax ---
+commit=ee8b2fa0148c6f2fb28f74b1f980f5652b717fe7
+version=38
+failed_at=2026-08-18T19:34:54Z
+panel=present
+navigation_v38=present
+panel_v38=yes
+search=yes
+favorites=yes
+breadcrumbs=yes
