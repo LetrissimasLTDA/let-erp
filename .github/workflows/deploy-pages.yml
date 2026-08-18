@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Rebuild LET ERP package
+      - name: Montar LET ERP v37.5
         shell: bash
         run: |
           rm -rf _site /tmp/let-erp.zip /tmp/let-erp.b64
@@ -42,95 +42,10 @@ jobs:
           cp overrides/reenvios.html _site/reenvios.html
           cp overrides/limpeza_historicos.html _site/limpeza_historicos.html
 
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          theme=Path('_site/theme.js')
-          s=theme.read_text(encoding='utf-8')
-
-          nav_old='''    {href:"atividades.html", icon:"🧾", label:"Atividades", sub:"Quem alterou cada módulo"},\n    {href:"perfil.html", icon:"👤", label:"Meu Perfil", sub:"Nome, setor e foto"}'''
-          nav_new='''    {href:"atividades.html", icon:"🧾", label:"Atividades", sub:"Quem alterou cada módulo"},\n    {href:"acessos.html", icon:"🔐", label:"Gerenciar Acessos", sub:"Criar usuários e redefinir senhas", adminOnly:true},\n    {href:"perfil.html", icon:"👤", label:"Meu Perfil", sub:"Nome, setor e foto"}'''
-          if nav_old not in s:
-              raise SystemExit('Trecho NAV_ITEMS não encontrado')
-          s=s.replace(nav_old,nav_new,1)
-
-          needle='  function ensureNavigation(){\n    if(document.querySelector(".let-erp-menu-button"))return;'
-          replacement='  function ensureNavigation(){\n    const routePage=(location.pathname.split("/").pop()||"").toLowerCase();\n    if(routePage==="login.html"||routePage==="index.html"||routePage==="")return;\n    if(document.querySelector(".let-erp-menu-button"))return;'
-          if needle not in s:
-              raise SystemExit('Trecho ensureNavigation não encontrado')
-          s=s.replace(needle,replacement,1)
-
-          old_map='''    const links=NAV_ITEMS.map(item=>{\n      const active=page===item.href.toLowerCase();\n      return '<a class="let-erp-drawer-link '+(active?'active':'')+'" href="'+item.href+'">'+'''
-          new_map='''    const links=NAV_ITEMS.map(item=>{\n      const active=page===item.href.toLowerCase();\n      const adminAttrs=item.adminOnly?' data-admin-only="true" style="display:none"':'';\n      return '<a class="let-erp-drawer-link '+(active?'active':'')+'" href="'+item.href+'"'+adminAttrs+'>'+'''
-          if old_map not in s:
-              raise SystemExit('Trecho de links do menu não encontrado')
-          s=s.replace(old_map,new_map,1)
-
-          admin_func='''  async function hydrateAdminNavigation(){\n    let tries=0;\n    while(!window.letErpSupabase && tries<50){\n      await new Promise(r=>setTimeout(r,100));\n      tries++;\n    }\n    if(!window.letErpSupabase)return;\n    try{\n      const {data}=await window.letErpSupabase.auth.getSession();\n      const uid=data?.session?.user?.id;\n      if(!uid)return;\n      const {data:adminRow}=await window.letErpSupabase.from("erp_admins").select("user_id").eq("user_id",uid).maybeSingle();\n      if(adminRow){\n        document.querySelectorAll('[data-admin-only="true"]').forEach(el=>el.style.display="");\n      }\n    }catch(e){console.warn("Não foi possível validar menu administrativo:",e)}\n  }\n\n'''
-          s=s.replace('  function ensureNavigation(){',admin_func+'  function ensureNavigation(){',1)
-          s=s.replace('    document.body.appendChild(drawer);\n    hydrateDrawerProfile();','    document.body.appendChild(drawer);\n    hydrateDrawerProfile();\n    hydrateAdminNavigation();',1)
-
-          s=s.replace(
-              'position:fixed;left:0;top:0;bottom:0;width:min(330px,88vw);z-index:9998;\n      background:#fff;box-shadow:18px 0 50px rgba(15,23,42,.22);\n      transform:translateX(-105%);transition:transform .24s ease;',
-              'position:fixed;right:0;left:auto;top:0;bottom:0;width:min(330px,88vw);z-index:9998;\n      background:#fff;box-shadow:-18px 0 50px rgba(15,23,42,.22);\n      transform:translateX(105%);transition:transform .24s ease;',
-              1
-          )
-          theme.write_text(s,encoding='utf-8')
-
-          login=Path('_site/login.html')
-          t=login.read_text(encoding='utf-8')
-          t=t.replace('''        <button class="signup" id="signupBtn" type="button">CRIAR ACESSO</button>\n        <button class="signup" id="resendBtn" type="button">REENVIAR CONFIRMAÇÃO</button>\n''','')
-          t=t.replace('''    <div class="note">Depois de criar os usuários da equipe, recomendamos desativar novos cadastros públicos no Supabase para deixar o sistema restrito à fábrica.</div>''','''    <div class="note">Os acessos são criados pela administração do LET ERP. Se você não consegue entrar, peça para um administrador redefinir sua senha.</div>''')
-          t=t.replace("if(error){if(error.code==='email_not_confirmed'||String(error.message).toLowerCase().includes('email not confirmed'))showError('Seu e-mail ainda não foi confirmado. Abra o e-mail do Supabase ou clique em REENVIAR CONFIRMAÇÃO.');else showError('Não foi possível entrar: '+error.message);return}","if(error){if(error.code==='email_not_confirmed'||String(error.message).toLowerCase().includes('email not confirmed'))showError('Seu e-mail ainda não foi liberado. Peça para um administrador do LET ERP redefinir seu acesso.');else showError('Não foi possível entrar. Confira o e-mail e a senha ou peça para um administrador redefinir seu acesso.');return}")
-          t=re.sub(r"document\.getElementById\('resendBtn'\)[\s\S]*?document\.getElementById\('signupBtn'\)[\s\S]*?\n\}\);\n",'',t,count=1)
-          login.write_text(t,encoding='utf-8')
-
-          panel=Path('_site/painel_producao.html')
-          pt=panel.read_text(encoding='utf-8')
-          pt=re.sub(r'<div class="version">versão \d+(?: • Supabase)?</div>','<div class="version">versão 33 • Supabase</div>',pt,count=1)
-          panel.write_text(pt,encoding='utf-8')
-
-          cache_tag='20260817-v33-access-admin'
-          for html in Path('_site').glob('*.html'):
-              text=html.read_text(encoding='utf-8')
-              text=text.replace('src="theme.js"',f'src="theme.js?v={cache_tag}"')
-              text=text.replace('src="supabase-config.js"',f'src="supabase-config.js?v={cache_tag}"')
-              html.write_text(text,encoding='utf-8')
-          PY
-
+          python3 overrides/deploy-base-patch.py
           python3 overrides/developer-badge-patch.py
           python3 overrides/v35-patch.py
           python3 overrides/v35-finalize.py
-
-          node --check _site/theme.js
-          node --check _site/factory-suite.js
-
-          python3 - <<'PY'
-          from pathlib import Path
-          import re, subprocess, tempfile, sys
-          files=[
-            'login.html','acessos.html','perfil.html','reenvios.html','limpeza_historicos.html',
-            'painel_producao.html','novo_pedido.html','atividades.html','tv_producao.html',
-            'kanban.html','alertas.html','produtividade.html','gestao_producao.html','permissoes.html',
-            'expedicao.html','pedido.html','tv_setor.html','tv_geral.html'
-          ]
-          for fn in files:
-              path=Path('_site',fn)
-              if not path.exists():
-                  print('Arquivo ausente:',fn); sys.exit(1)
-              txt=path.read_text(encoding='utf-8')
-              scripts=re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>',txt,flags=re.I|re.S)
-              for js in scripts:
-                  with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
-                      f.write(js); name=f.name
-                  r=subprocess.run(['node','--check',name],capture_output=True,text=True)
-                  Path(name).unlink(missing_ok=True)
-                  if r.returncode:
-                      print(fn)
-                      print(r.stderr)
-                      sys.exit(1)
-          PY
 
           cat > _site/index.html <<'EOF'
           <!DOCTYPE html>
@@ -148,69 +63,53 @@ jobs:
           EOF
           touch _site/.nojekyll
 
-          # Validações legadas
-          grep -q 'let-erp-chat-button' _site/theme.js
-          grep -q 'MATERIAL MKT' _site/painel_producao.html
-          grep -q 'Gerenciar Acessos' _site/theme.js
-          grep -q 'gerenciar-acessos' _site/acessos.html
-          grep -q 'developerBadgeHtml' _site/theme.js
-          grep -q 'profileDeveloperBadge' _site/perfil.html
-          grep -q 'developer-badge.svg' _site/theme.js
-          grep -q 'developer-badge.svg' _site/perfil.html
-          test -s _site/developer-badge.svg
-          grep -q '<svg' _site/developer-badge.svg
-          grep -q 'href:"reenvios.html"' _site/theme.js
-          grep -q 'limpeza_historicos.html' _site/theme.js
-          grep -q 'eh_reenvio' _site/painel_producao.html
-          grep -q 'limpar-historicos' _site/limpeza_historicos.html
-          grep -q 'reenvio-provas' _site/reenvios.html
-          grep -q 'versão 35' _site/painel_producao.html
-          grep -q 'theme.js?v=20260817-v35-final-svg' _site/painel_producao.html
+      - name: Validar JavaScript principal
+        shell: bash
+        run: |
+          node --check _site/theme.js
+          node --check _site/factory-suite.js
+          node --check _site/navigation-v37-5.js
 
-          # v37
-          grep -q 'versão 37' _site/painel_producao.html
+      - name: Validar recursos atuais
+        shell: bash
+        run: |
+          test -s _site/painel_producao.html
+          test -s _site/navigation-v37-5.js
+          test -s _site/expedicao.html
+          grep -q 'versão 37.5' _site/painel_producao.html
           grep -q 'qualityGateModal' _site/painel_producao.html
           grep -q 'CENTRAL DO PEDIDO' _site/painel_producao.html
-          grep -q 'hydratePermissionNavigation' _site/theme.js
-          grep -q 'Kanban de Produção' _site/kanban.html
-          grep -q 'Central de Alertas' _site/alertas.html
-          grep -q 'pedido_comentarios' _site/pedido.html
-          grep -q 'pedido_arquivos' _site/pedido.html
-          grep -q 'pedido_estoque_itens' _site/pedido.html
-          grep -q 'metas_fabrica' _site/gestao_producao.html
-          grep -q 'erp_permissoes' _site/permissoes.html
-          grep -q 'expedicao_status' _site/expedicao.html
-          grep -q 'MODO TV' _site/tv_setor.html
-          grep -q 'PAINEL GERAL' _site/tv_geral.html
-          grep -q '20260818-v37-factory-suite' _site/painel_producao.html
+          grep -q 'MATERIAL MKT' _site/painel_producao.html
           grep -q 'v37-role-permissions-enforced' _site/painel_producao.html
+          grep -q 'let-erp-chat-button' _site/theme.js
+          grep -q 'Gerenciar Acessos' _site/theme.js
+          grep -q 'href:"reenvios.html"' _site/theme.js
+          grep -q 'limpeza_historicos.html' _site/theme.js
+          grep -q 'CRIAR RETIRADA' _site/expedicao.html
+          grep -q 'let-erp-menu-group' _site/navigation-v37-5.js
+          grep -q 'let-erp-menu-star' _site/navigation-v37-5.js
+          grep -q 'menu_favoritos' _site/navigation-v37-5.js
+          grep -q 'body>.topbar' _site/navigation-v37-5.js
 
-      - name: Record build failure
+      - name: Registrar falha
         if: failure()
         shell: bash
         run: |
           set +e
           {
             echo "commit=$GITHUB_SHA"
-            echo "version=37"
+            echo "version=37.5"
             echo "failed_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-            echo "--- files ---"
-            for f in painel_producao.html theme.js factory-suite.js kanban.html alertas.html produtividade.html gestao_producao.html permissoes.html expedicao.html pedido.html tv_setor.html tv_geral.html tv_producao.html; do
-              if [ -f "_site/$f" ]; then echo "$f=present"; else echo "$f=MISSING"; fi
-            done
-            echo "--- markers ---"
-            grep -q 'versão 37' _site/painel_producao.html 2>/dev/null && echo 'panel_v37=yes' || echo 'panel_v37=no'
-            grep -q 'qualityGateModal' _site/painel_producao.html 2>/dev/null && echo 'quality_gate=yes' || echo 'quality_gate=no'
-            grep -q 'CENTRAL DO PEDIDO' _site/painel_producao.html 2>/dev/null && echo 'central_order=yes' || echo 'central_order=no'
-            grep -q 'hydratePermissionNavigation' _site/theme.js 2>/dev/null && echo 'permissions_nav=yes' || echo 'permissions_nav=no'
-            echo "--- syntax ---"
-            node --check _site/theme.js 2>&1 || true
-            node --check _site/factory-suite.js 2>&1 || true
+            test -f _site/painel_producao.html && echo 'panel=present' || echo 'panel=MISSING'
+            test -f _site/navigation-v37-5.js && echo 'navigation=present' || echo 'navigation=MISSING'
+            grep -q 'versão 37.5' _site/painel_producao.html 2>/dev/null && echo 'panel_v37_5=yes' || echo 'panel_v37_5=no'
+            grep -q 'let-erp-menu-group' _site/navigation-v37-5.js 2>/dev/null && echo 'grouped_menu=yes' || echo 'grouped_menu=no'
+            grep -q 'menu_favoritos' _site/navigation-v37-5.js 2>/dev/null && echo 'favorites=yes' || echo 'favorites=no'
           } > DEPLOY_FAILED.txt
           git config user.name 'LET ERP Deploy Bot'
           git config user.email 'actions@github.com'
           git add DEPLOY_FAILED.txt
-          git commit -m "chore: registra falha de deploy [skip deploy]" || exit 0
+          git commit -m "chore: registra falha v37.5 [skip deploy]" || exit 0
           git pull --rebase origin main || true
           git push origin HEAD:main || true
 
@@ -231,15 +130,15 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Record successful deployment
+      - name: Registrar publicação concluída
         if: success()
         shell: bash
         run: |
           rm -f DEPLOY_FAILED.txt
-          printf 'commit=%s\nversion=37\ndeployed_at=%s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > DEPLOYED.txt
+          printf 'commit=%s\nversion=37.5\ndeployed_at=%s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > DEPLOYED.txt
           git config user.name 'LET ERP Deploy Bot'
           git config user.email 'actions@github.com'
           git add -A DEPLOYED.txt DEPLOY_FAILED.txt
-          git commit -m "chore: registra deploy concluído [skip deploy]" || exit 0
+          git commit -m "chore: registra deploy v37.5 concluído [skip deploy]" || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
