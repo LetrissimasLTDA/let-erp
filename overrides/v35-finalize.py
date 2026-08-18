@@ -112,3 +112,4 @@ except Exception as exc:
     raise SystemExit('Falha ao reconstruir pacote v37: '+str(exc))
 
 exec(compile(Path('overrides/v37-suite.py').read_text(encoding='utf-8'),'overrides/v37-suite.py','exec'))
+exec(compile(Path('overrides/v37-security-ui.py').read_text(encoding='utf-8'),'overrides/v37-security-ui.py','exec'))
