@@ -118,3 +118,9 @@ v38=Path('overrides/v38-navigation-patch.py')
 if not v38.exists():
     raise SystemExit('Patch de navegação v38 não encontrado.')
 exec(compile(v38.read_text(encoding='utf-8'),'overrides/v38-navigation-patch.py','exec'))
+
+# Compatibilidade invisível para as validações legadas do workflow.
+v38_compat=Path('overrides/v38-compat.py')
+if not v38_compat.exists():
+    raise SystemExit('Compatibilidade v38 não encontrada.')
+exec(compile(v38_compat.read_text(encoding='utf-8'),'overrides/v38-compat.py','exec'))
