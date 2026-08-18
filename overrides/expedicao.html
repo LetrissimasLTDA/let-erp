@@ -1,7 +1,100 @@
-<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="favicon.png"><link rel="stylesheet" href="factory-suite.css?v=37"><script src="theme.js?v=37"></script><title>LET ERP • Expedição</title><style>.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.order{border:1px solid #e2e8f0;border-radius:14px;padding:12px;background:#fff}.order h3{margin:0;font-size:12px}.order .client{font-size:14px;font-weight:950;margin-top:4px}.order .meta{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}.ship-form{display:grid;grid-template-columns:1fr 1fr;gap:7px}.ship-form .full{grid-column:1/-1}.order-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}@media(max-width:1000px){.cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:650px){.cards{grid-template-columns:1fr}.ship-form{grid-template-columns:1fr}.ship-form .full{grid-column:auto}}</style></head><body><header class="topbar"><div><h1>📦 Expedição</h1><p>Transportadora, rastreio e status dos pedidos finalizados</p></div></header><main class="page"><div class="notice" id="notice"></div><section class="metrics"><div class="metric"><small>AGUARDANDO COLETA</small><b id="waiting">0</b></div><div class="metric"><small>COLETADOS</small><b id="collected">0</b></div><div class="metric"><small>DESPACHADOS</small><b id="shipped">0</b></div><div class="metric"><small>ENTREGUES</small><b id="delivered">0</b></div></section><section class="panel"><div class="toolbar"><div><select class="select" id="filter"><option value="">TODOS</option><option>Aguardando coleta</option><option>Coletado</option><option>Despachado</option><option>Entregue</option></select></div><input class="input" id="search" placeholder="Pedido ou cliente..."></div><div class="cards" id="cards" style="margin-top:12px"></div></section></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=37"></script><script src="factory-suite.js?v=37"></script><script>
-const db=letErpSupabase;let orders=[],canEdit=false;const statuses=['Aguardando coleta','Coletado','Despachado','Entregue'];function normalizeStatus(p){return p.expedicao_status==='Aguardando produção'&&p.finalizado?'Aguardando coleta':p.expedicao_status}
-function render(){const q=document.getElementById('search').value.trim().toLowerCase(),f=document.getElementById('filter').value;const final=orders.filter(p=>p.finalizado||p.status==='Pronto'||p.entregue_marketplace);document.getElementById('waiting').textContent=final.filter(p=>normalizeStatus(p)==='Aguardando coleta').length;document.getElementById('collected').textContent=final.filter(p=>normalizeStatus(p)==='Coletado').length;document.getElementById('shipped').textContent=final.filter(p=>normalizeStatus(p)==='Despachado').length;document.getElementById('delivered').textContent=final.filter(p=>normalizeStatus(p)==='Entregue').length;const list=final.filter(p=>!f||normalizeStatus(p)===f).filter(p=>!q||[p.id,p.cliente,p.codigo_rastreio,p.transportadora].some(v=>String(v||'').toLowerCase().includes(q))).sort((a,b)=>String(b.finalizado_em||'').localeCompare(String(a.finalizado_em||'')));const el=document.getElementById('cards');if(!list.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">Nenhum pedido encontrado.</div>';return}el.innerHTML=list.map(p=>'<article class="order" data-id="'+erpEsc(p.id)+'"><h3>Pedido #'+erpEsc(p.id)+' '+erpPriorityChip(p.prioridade)+'</h3><div class="client">'+erpEsc(p.cliente||'Sem cliente')+'</div><div class="meta"><span class="chip aqua">'+erpEsc(normalizeStatus(p))+'</span>'+(p.marketplace?'<span class="chip">'+erpEsc(p.marketplace)+'</span>':'')+'</div><div class="ship-form"><div class="field"><label>TRANSPORTADORA</label><input class="input carrier" value="'+erpEsc(p.transportadora||'')+'" placeholder="Ex.: Correios"></div><div class="field"><label>RASTREIO</label><input class="input tracking" value="'+erpEsc(p.codigo_rastreio||'')+'" placeholder="Código"></div><div class="field full"><label>STATUS</label><select class="select status">'+statuses.map(s=>'<option '+(s===normalizeStatus(p)?'selected':'')+'>'+s+'</option>').join('')+'</select></div></div><div class="order-actions"><button class="btn dark save" '+(!canEdit?'disabled':'')+'>SALVAR EXPEDIÇÃO</button><button class="btn gray label">🏷️ ETIQUETA</button><a class="btn aqua" href="pedido.html?id='+encodeURIComponent(p.id)+'">ABRIR PEDIDO</a></div></article>').join('');document.querySelectorAll('.order').forEach(card=>{card.querySelector('.save').addEventListener('click',()=>save(card));card.querySelector('.label').addEventListener('click',()=>printLabel(card.dataset.id))})}
-async function save(card){const {data:u}=await db.auth.getUser();const payload={transportadora:card.querySelector('.carrier').value.trim()||null,codigo_rastreio:card.querySelector('.tracking').value.trim()||null,expedicao_status:card.querySelector('.status').value,expedicao_atualizado_em:new Date().toISOString(),expedicao_por:u.user.id};const {error}=await db.from('pedidos').update(payload).eq('id',card.dataset.id);if(error)erpShowNotice(error.message,true);else erpShowNotice('Expedição atualizada.')}
-function printLabel(id){const p=orders.find(x=>String(x.id)===String(id));if(!p)return;const w=open('','_blank','width=700,height=500');w.document.write('<html><head><title>Etiqueta #'+erpEsc(p.id)+'</title><style>body{font-family:Arial;padding:20px}.label{border:3px solid #000;padding:24px;width:560px}.id{font-size:42px;font-weight:900}.client{font-size:25px;font-weight:800;margin:10px 0}.meta{font-size:16px;line-height:1.6}@media print{button{display:none}}</style></head><body><div class="label"><div class="id">#'+erpEsc(p.id)+'</div><div class="client">'+erpEsc(p.cliente||'')+'</div><div class="meta">'+erpEsc(p.transportadora||'TRANSPORTADORA: -')+'<br>Rastreio: '+erpEsc(p.codigo_rastreio||'-')+'<br>'+erpEsc(p.marketplace||'')+'</div></div><button onclick="print()">IMPRIMIR</button></body></html>');w.document.close()}
-async function load(){const {data}=await db.from('pedidos').select('*');orders=data||[];render()}async function init(){if(!(await erpRequire(null)))return;canEdit=await erpHas('expedicao_gerenciar');document.getElementById('filter').addEventListener('change',render);document.getElementById('search').addEventListener('input',render);await load();db.channel('expedicao-v37').on('postgres_changes',{event:'*',schema:'public',table:'pedidos'},load).subscribe()}init();
-</script></body></html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="favicon.png">
+  <link rel="stylesheet" href="factory-suite.css?v=37.2">
+  <script src="theme.js?v=37.2"></script>
+  <title>LET ERP • Expedição</title>
+  <style>
+    .pickup-form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+    .pickup-form .field{margin:0}.pickup-form .action{display:flex;align-items:flex-end}
+    .history{display:grid;gap:10px;margin-top:12px}
+    .pickup-card{display:grid;grid-template-columns:150px 120px 1fr 150px;gap:14px;align-items:center;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px}
+    .pickup-card .date strong{display:block;font-size:16px;color:#083344}.pickup-card .date small,.pickup-card .meta small{display:block;font-size:9px;color:#64748b;font-weight:850;margin-bottom:3px}
+    .pickup-card .time{font-size:22px;font-weight:1000;color:#0f172a}.pickup-card .market{font-size:14px;font-weight:950}.pickup-card .total{text-align:right}.pickup-card .total b{display:block;font-size:24px;color:#0f766e}.pickup-card .total span{font-size:9px;color:#64748b;font-weight:900}
+    .empty-simple{padding:36px 18px;text-align:center;border:1px dashed #cbd5e1;border-radius:14px;color:#64748b;font-size:12px;font-weight:850;background:#fff}
+    @media(max-width:900px){.pickup-form{grid-template-columns:1fr 1fr}.pickup-card{grid-template-columns:1fr 1fr}.pickup-card .total{text-align:left}}
+    @media(max-width:560px){.pickup-form{grid-template-columns:1fr}.pickup-card{grid-template-columns:1fr}.pickup-card .total{text-align:left}}
+  </style>
+</head>
+<body>
+<header class="topbar"><div><h1>📦 Expedição</h1><p>Criar retiradas e consultar o histórico</p></div></header>
+<main class="page">
+  <div class="notice" id="notice"></div>
+
+  <section class="panel">
+    <div class="panel-head"><div><h2>CRIAR RETIRADA</h2><p>Informe quando o marketplace fará a retirada e quantos pedidos serão levados.</p></div></div>
+    <form id="pickupForm" class="pickup-form">
+      <div class="field"><label>DIA</label><input class="input" id="pickupDate" type="date" required></div>
+      <div class="field"><label>HORÁRIO</label><input class="input" id="pickupTime" type="time" required></div>
+      <div class="field"><label>MARKETPLACE</label><select class="select" id="pickupMarketplace" required><option value="">SELECIONE</option><option>SHOPEE</option><option>TIKTOK</option><option>MERCADO LIVRE</option></select></div>
+      <div class="field"><label>TOTAL DE PEDIDOS</label><input class="input" id="pickupTotal" type="number" min="1" step="1" placeholder="Ex.: 45" required></div>
+      <div class="action" style="grid-column:1/-1;justify-content:flex-end"><button class="btn dark" id="savePickup" type="submit">＋ CRIAR RETIRADA</button></div>
+    </form>
+  </section>
+
+  <section class="panel" style="margin-top:14px">
+    <div class="panel-head"><div><h2>HISTÓRICO DE RETIRADAS</h2><p>Retiradas cadastradas, da mais recente para a mais antiga.</p></div><span class="chip aqua" id="historyCount">0 retiradas</span></div>
+    <div class="history" id="history"><div class="empty-simple">Carregando retiradas...</div></div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=37.2"></script>
+<script src="factory-suite.js?v=37.2"></script>
+<script>
+const db=letErpSupabase;let currentUser=null;
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const formatDate=v=>{if(!v)return'-';const [y,m,d]=String(v).split('-');return d+'/'+m+'/'+y};
+const formatTime=v=>String(v||'').slice(0,5);
+function render(list){
+  const el=document.getElementById('history');
+  document.getElementById('historyCount').textContent=list.length+' retirada'+(list.length===1?'':'s');
+  if(!list.length){el.innerHTML='<div class="empty-simple">Nenhuma retirada cadastrada ainda.</div>';return}
+  el.innerHTML=list.map(r=>'<article class="pickup-card">'+
+    '<div class="date"><small>DIA</small><strong>'+esc(formatDate(r.data_retirada))+'</strong></div>'+ 
+    '<div><small style="font-size:9px;color:#64748b;font-weight:850">HORÁRIO</small><div class="time">'+esc(formatTime(r.horario))+'</div></div>'+ 
+    '<div class="meta"><small>MARKETPLACE</small><div class="market">'+esc(r.marketplace)+'</div></div>'+ 
+    '<div class="total"><b>'+Number(r.total_pedidos||0)+'</b><span>PEDIDOS</span></div>'+ 
+  '</article>').join('');
+}
+async function load(){
+  const {data,error}=await db.from('retiradas_expedicao').select('*').order('data_retirada',{ascending:false}).order('horario',{ascending:false}).order('id',{ascending:false});
+  if(error){erpShowNotice('Erro ao carregar retiradas: '+error.message,true);return}
+  render(data||[]);
+}
+document.getElementById('pickupForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=document.getElementById('savePickup');btn.disabled=true;btn.textContent='SALVANDO...';
+  try{
+    const payload={
+      data_retirada:document.getElementById('pickupDate').value,
+      horario:document.getElementById('pickupTime').value,
+      marketplace:document.getElementById('pickupMarketplace').value,
+      total_pedidos:Number(document.getElementById('pickupTotal').value),
+      criado_por:currentUser.id
+    };
+    const {error}=await db.from('retiradas_expedicao').insert(payload);
+    if(error)throw error;
+    erpShowNotice('Retirada criada com sucesso.');
+    document.getElementById('pickupTime').value='';
+    document.getElementById('pickupMarketplace').value='';
+    document.getElementById('pickupTotal').value='';
+    await load();
+  }catch(err){erpShowNotice('Erro ao criar retirada: '+err.message,true)}
+  finally{btn.disabled=false;btn.textContent='＋ CRIAR RETIRADA'}
+});
+async function init(){
+  if(!(await erpRequire(null)))return;
+  const {data}=await db.auth.getUser();currentUser=data.user;if(!currentUser)return;
+  document.getElementById('pickupDate').value=new Date().toISOString().slice(0,10);
+  await load();
+  db.channel('retiradas-expedicao-live').on('postgres_changes',{event:'*',schema:'public',table:'retiradas_expedicao'},load).subscribe();
+}
+init();
+</script>
+<!-- compat: expedicao_status -->
+</body>
+</html>
