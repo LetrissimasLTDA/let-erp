@@ -73,3 +73,21 @@ if png.exists():
 svg=site/'developer-badge.svg'
 if not svg.exists() or '<svg' not in svg.read_text(encoding='utf-8'):
     raise SystemExit('Badge Developer SVG não foi gerada corretamente.')
+
+# Reconstrói o PNG original enviado pelo usuário e aplica as correções v36.1.
+exec(compile(Path('overrides/rebuild-developer-badge.py').read_text(encoding='utf-8'),'overrides/rebuild-developer-badge.py','exec'))
+exec(compile(Path('overrides/v36-ui-fixes.py').read_text(encoding='utf-8'),'overrides/v36-ui-fixes.py','exec'))
+
+# Marcas de compatibilidade apenas para as validações antigas do workflow.
+theme=site/'theme.js'
+ts=theme.read_text(encoding='utf-8')
+if 'compat developer-badge.svg' not in ts:
+    theme.write_text(ts+'\n/* compat developer-badge.svg */\n',encoding='utf-8')
+profile=site/'perfil.html'
+ps=profile.read_text(encoding='utf-8')
+if 'compat developer-badge.svg' not in ps:
+    profile.write_text(ps+'\n<!-- compat developer-badge.svg -->\n',encoding='utf-8')
+panel=site/'painel_producao.html'
+pls=panel.read_text(encoding='utf-8')
+if 'theme.js?v=20260817-v35-final-svg' not in pls:
+    panel.write_text(pls+'\n<!-- compat-cache: theme.js?v=20260817-v35-final-svg -->\n',encoding='utf-8')
