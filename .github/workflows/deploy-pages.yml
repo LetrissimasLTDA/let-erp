@@ -101,12 +101,22 @@ jobs:
           python3 overrides/v35-finalize.py
 
           node --check _site/theme.js
+          node --check _site/factory-suite.js
 
           python3 - <<'PY'
           from pathlib import Path
           import re, subprocess, tempfile, sys
-          for fn in ['login.html','acessos.html','perfil.html','reenvios.html','limpeza_historicos.html','painel_producao.html','novo_pedido.html','atividades.html']:
-              txt=Path('_site',fn).read_text(encoding='utf-8')
+          files=[
+            'login.html','acessos.html','perfil.html','reenvios.html','limpeza_historicos.html',
+            'painel_producao.html','novo_pedido.html','atividades.html','tv_producao.html',
+            'kanban.html','alertas.html','produtividade.html','gestao_producao.html','permissoes.html',
+            'expedicao.html','pedido.html','tv_setor.html','tv_geral.html'
+          ]
+          for fn in files:
+              path=Path('_site',fn)
+              if not path.exists():
+                  print('Arquivo ausente:',fn); sys.exit(1)
+              txt=path.read_text(encoding='utf-8')
               scripts=re.findall(r'<script(?![^>]*\\bsrc=)[^>]*>(.*?)</script>',txt,flags=re.I|re.S)
               for js in scripts:
                   with tempfile.NamedTemporaryFile('w',suffix='.js',delete=False,encoding='utf-8') as f:
@@ -135,6 +145,7 @@ jobs:
           EOF
           touch _site/.nojekyll
 
+          # Validações legadas
           grep -q 'let-erp-chat-button' _site/theme.js
           grep -q 'MATERIAL MKT' _site/painel_producao.html
           grep -q 'Gerenciar Acessos' _site/theme.js
@@ -152,6 +163,23 @@ jobs:
           grep -q 'reenvio-provas' _site/reenvios.html
           grep -q 'versão 35' _site/painel_producao.html
           grep -q 'theme.js?v=20260817-v35-final-svg' _site/painel_producao.html
+
+          # v37: nenhuma publicação passa sem os módulos principais
+          grep -q 'versão 37' _site/painel_producao.html
+          grep -q 'qualityGateModal' _site/painel_producao.html
+          grep -q 'CENTRAL DO PEDIDO' _site/painel_producao.html
+          grep -q 'hydratePermissionNavigation' _site/theme.js
+          grep -q 'Kanban de Produção' _site/kanban.html
+          grep -q 'Central de Alertas' _site/alertas.html
+          grep -q 'pedido_comentarios' _site/pedido.html
+          grep -q 'pedido_arquivos' _site/pedido.html
+          grep -q 'pedido_estoque_itens' _site/pedido.html
+          grep -q 'metas_fabrica' _site/gestao_producao.html
+          grep -q 'erp_permissoes' _site/permissoes.html
+          grep -q 'expedicao_status' _site/expedicao.html
+          grep -q 'MODO TV' _site/tv_setor.html
+          grep -q 'PAINEL GERAL' _site/tv_geral.html
+          grep -q '20260818-v37-factory-suite' _site/painel_producao.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
