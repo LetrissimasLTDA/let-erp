@@ -20,7 +20,6 @@ for html in site.glob('*.html'):
 panel=site/'painel_producao.html'
 if panel.exists():
     text=panel.read_text(encoding='utf-8')
-    text=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.6 • Supabase</div>',text,count=1)
     if 'v37.6-design-ux' not in text:
         text+='\n<!-- v37.6-design-ux -->\n'
     panel.write_text(text,encoding='utf-8')
