@@ -96,6 +96,6 @@ for html in site.glob('*.html'):
     text=re.sub(r'src="supabase-config\.js(?:\?v=[^"]+)?"',f'src="supabase-config.js?v={cache}"',text)
     html.write_text(text,encoding='utf-8')
 
-# Marca para validação do deploy.
+# Marcas para validação do deploy. A segunda mantém compatibilidade com o grep v37 anterior.
 with (site/'painel_producao.html').open('a',encoding='utf-8') as f:
-    f.write('\n<!-- v37-role-permissions-enforced -->\n')
+    f.write('\n<!-- v37-role-permissions-enforced | compat-cache: 20260818-v37-factory-suite -->\n')
