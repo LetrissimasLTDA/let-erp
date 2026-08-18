@@ -1,0 +1,35 @@
+commit=edbe64d18e29aa7aa8be9b30978f7bab6fa12c22
+version=37
+failed_at=2026-08-18T17:57:29Z
+--- files ---
+painel_producao.html=present
+theme.js=present
+factory-suite.js=MISSING
+kanban.html=MISSING
+alertas.html=MISSING
+produtividade.html=MISSING
+gestao_producao.html=MISSING
+permissoes.html=MISSING
+expedicao.html=MISSING
+pedido.html=MISSING
+tv_setor.html=MISSING
+tv_geral.html=MISSING
+tv_producao.html=present
+--- markers ---
+panel_v37=no
+quality_gate=no
+central_order=no
+permissions_nav=no
+--- syntax ---
+node:internal/modules/cjs/loader:1433
+  throw err;
+  ^
+
+Error: Cannot find module '/home/runner/work/let-erp/let-erp/_site/factory-suite.js'
+    at node:internal/modules/cjs/loader:1430:15
+    at node:internal/main/check_syntax:33:20 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v22.23.2
