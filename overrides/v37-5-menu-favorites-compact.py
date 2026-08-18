@@ -30,3 +30,9 @@ js=(site/'navigation-v37-5.js').read_text(encoding='utf-8')
 for token in ['let-erp-menu-group','let-erp-menu-star','menu_favoritos','body>.topbar']:
     if token not in js:
         raise SystemExit('Patch v37.5 incompleto: '+token)
+
+# v37.6: acabamento visual, progresso e dashboard personalizável.
+patch=Path('overrides/v37-6-design-patch.py')
+if not patch.exists():
+    raise SystemExit('Patch v37.6 não encontrado.')
+exec(compile(patch.read_text(encoding='utf-8'),'overrides/v37-6-design-patch.py','exec'))
