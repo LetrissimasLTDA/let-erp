@@ -27,7 +27,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Montar LET ERP v37.5
+      - name: Montar LET ERP v37.7
         shell: bash
         run: |
           rm -rf _site /tmp/let-erp.zip /tmp/let-erp.b64
@@ -69,18 +69,27 @@ jobs:
           node --check _site/theme.js
           node --check _site/factory-suite.js
           node --check _site/navigation-v37-5.js
+          node --check _site/stability-v37-7.js
+          node --check _site/pedido-central.js
 
       - name: Validar recursos atuais
         shell: bash
         run: |
           test -s _site/painel_producao.html
           test -s _site/navigation-v37-5.js
+          test -s _site/stability-v37-7.js
+          test -s _site/pedido-central.js
+          test -s _site/pedido.html
           test -s _site/expedicao.html
-          grep -q 'versão 37.5' _site/painel_producao.html
+          grep -q 'versão 37.7' _site/painel_producao.html
           grep -q 'qualityGateModal' _site/painel_producao.html
           grep -q 'CENTRAL DO PEDIDO' _site/painel_producao.html
           grep -q 'MATERIAL MKT' _site/painel_producao.html
           grep -q 'v37-role-permissions-enforced' _site/painel_producao.html
+          grep -q 'v37.7-stability-fixes' _site/painel_producao.html
+          grep -q 'pedido-central.js' _site/pedido.html
+          grep -q 'finalizar_pedido_erp' _site/stability-v37-7.js
+          grep -q 'marcar_atrasos_automaticos' _site/stability-v37-7.js
           grep -q 'let-erp-chat-button' _site/theme.js
           grep -q 'Gerenciar Acessos' _site/theme.js
           grep -q 'href:"reenvios.html"' _site/theme.js
@@ -98,18 +107,20 @@ jobs:
           set +e
           {
             echo "commit=$GITHUB_SHA"
-            echo "version=37.5"
+            echo "version=37.7"
             echo "failed_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
             test -f _site/painel_producao.html && echo 'panel=present' || echo 'panel=MISSING'
             test -f _site/navigation-v37-5.js && echo 'navigation=present' || echo 'navigation=MISSING'
-            grep -q 'versão 37.5' _site/painel_producao.html 2>/dev/null && echo 'panel_v37_5=yes' || echo 'panel_v37_5=no'
+            test -f _site/stability-v37-7.js && echo 'stability=present' || echo 'stability=MISSING'
+            test -f _site/pedido-central.js && echo 'pedido_central=present' || echo 'pedido_central=MISSING'
+            grep -q 'versão 37.7' _site/painel_producao.html 2>/dev/null && echo 'panel_v37_7=yes' || echo 'panel_v37_7=no'
             grep -q 'let-erp-menu-group' _site/navigation-v37-5.js 2>/dev/null && echo 'grouped_menu=yes' || echo 'grouped_menu=no'
             grep -q 'menu_favoritos' _site/navigation-v37-5.js 2>/dev/null && echo 'favorites=yes' || echo 'favorites=no'
           } > DEPLOY_FAILED.txt
           git config user.name 'LET ERP Deploy Bot'
           git config user.email 'actions@github.com'
           git add DEPLOY_FAILED.txt
-          git commit -m "chore: registra falha v37.5 [skip deploy]" || exit 0
+          git commit -m "chore: registra falha v37.7 [skip deploy]" || exit 0
           git pull --rebase origin main || true
           git push origin HEAD:main || true
 
@@ -135,10 +146,10 @@ jobs:
         shell: bash
         run: |
           rm -f DEPLOY_FAILED.txt
-          printf 'commit=%s\nversion=37.5\ndeployed_at=%s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > DEPLOYED.txt
+          printf 'commit=%s\nversion=37.7\ndeployed_at=%s\n' "$GITHUB_SHA" "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" > DEPLOYED.txt
           git config user.name 'LET ERP Deploy Bot'
           git config user.email 'actions@github.com'
           git add -A DEPLOYED.txt DEPLOY_FAILED.txt
-          git commit -m "chore: registra deploy v37.5 concluído [skip deploy]" || exit 0
+          git commit -m "chore: registra deploy v37.7 concluído [skip deploy]" || exit 0
           git pull --rebase origin main
           git push origin HEAD:main
