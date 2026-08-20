@@ -124,3 +124,9 @@ patch=Path('overrides/v37-7-stability-patch.py')
 if not patch.exists():
     raise SystemExit('Patch v37.7 não encontrado.')
 exec(compile(patch.read_text(encoding='utf-8'),'overrides/v37-7-stability-patch.py','exec'))
+
+# v37.8: mantém o botão Marcar Todos do checklist de qualidade em todo build.
+patch=Path('overrides/v37-8-checklist-select-all.py')
+if not patch.exists():
+    raise SystemExit('Patch v37.8 não encontrado.')
+exec(compile(patch.read_text(encoding='utf-8'),'overrides/v37-8-checklist-select-all.py','exec'))
