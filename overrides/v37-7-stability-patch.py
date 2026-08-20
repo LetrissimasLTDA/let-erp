@@ -30,9 +30,11 @@ if not src.exists():
 shutil.copyfile(src,site/'stability-v37-7.js')
 panel=site/'painel_producao.html'
 p=panel.read_text(encoding='utf-8')
-tag='<script src="stability-v37-7.js?v=20260820-v37-7-stability"></script>'
+tag='<script src="stability-v37-7.js?v=20260820-v37-9-finalize-race-fix"></script>'
 if 'stability-v37-7.js' not in p:
-    p=p.replace('</body>',tag+'\n</body>',1)
+    pos=p.rfind('</body>')
+    if pos<0: raise SystemExit('Fechamento do body não encontrado no painel.')
+    p=p[:pos]+tag+'\n'+p[pos:]
 p=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.7 • Supabase</div>',p,count=1)
 if 'v37.7-stability-fixes' not in p:
     p+='\n<!-- v37.7-stability-fixes -->\n'
@@ -43,14 +45,6 @@ central=(site/'pedido-central.js').read_text(encoding='utf-8')
 for token in ['function printSheet()','function printLabel()','async function loadAll()','init();']:
     if token not in central:
         raise SystemExit('Central externa incompleta: '+token)
-for token in ['finalizar_pedido_erp','marcar_atrasos_automaticos','window.finalizarPedido']:
+for token in ['finalizar_pedido_erp','marcar_atrasos_automaticos','window.finalizarPedido','installQualityFinalizeFix','ensureFinalized']:
     if token not in (site/'stability-v37-7.js').read_text(encoding='utf-8'):
         raise SystemExit('Correção v37.7 incompleta: '+token)
-
-# ------------------------------------------------------------
-# 3) Checklist: opção para marcar/desmarcar todos os itens.
-# ------------------------------------------------------------
-select_all_patch=root/'v37-8-checklist-select-all.py'
-if not select_all_patch.exists():
-    raise SystemExit('Patch de Marcar Todos do checklist não encontrado.')
-exec(compile(select_all_patch.read_text(encoding='utf-8'),'overrides/v37-8-checklist-select-all.py','exec'))
