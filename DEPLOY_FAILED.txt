@@ -1,8 +1,10 @@
-commit=6bef4658222e7e1fbb5b56893af141f2f5e1d4d1
-version=37.5
-failed_at=2026-08-20T11:55:16Z
+commit=983081d9c75a4144f2e787ccfb3387e37ee35f5c
+version=37.7
+failed_at=2026-08-20T11:55:44Z
 panel=present
 navigation=present
-panel_v37_5=no
+stability=present
+pedido_central=present
+panel_v37_7=yes
 grouped_menu=yes
 favorites=yes
