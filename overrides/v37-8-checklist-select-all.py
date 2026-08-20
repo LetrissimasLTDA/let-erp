@@ -1,5 +1,5 @@
 from pathlib import Path
-import shutil,re
+import shutil
 
 site=Path('_site')
 root=Path('overrides')
@@ -16,15 +16,14 @@ src=root/'checklist-select-all-v37-8.js'
 if not src.exists():
     raise SystemExit('checklist-select-all-v37-8.js não encontrado')
 shutil.copyfile(src,site/'checklist-select-all-v37-8.js')
-tag='<script src="checklist-select-all-v37-8.js?v=20260820-v37-8"></script>'
+tag='<script src="checklist-select-all-v37-8.js?v=20260820-checklist-select-all"></script>'
 if 'checklist-select-all-v37-8.js' not in text:
     pos=text.rfind('</body>')
     if pos<0: raise SystemExit('Fechamento do body não encontrado no painel.')
     text=text[:pos]+tag+'\n'+text[pos:]
 
-text=re.sub(r'<div class="version">versão \d+(?:\.\d+)?(?: • Supabase)?</div>','<div class="version">versão 37.8 • Supabase</div>',text,count=1)
-if 'v37.8-checklist-select-all' not in text:
-    text+='\n<!-- v37.8-checklist-select-all -->\n'
+if 'checklist-select-all-ready' not in text:
+    text+='\n<!-- checklist-select-all-ready -->\n'
 panel.write_text(text,encoding='utf-8')
 
 js=(site/'checklist-select-all-v37-8.js').read_text(encoding='utf-8')
