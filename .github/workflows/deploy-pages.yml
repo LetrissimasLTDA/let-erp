@@ -46,6 +46,7 @@ jobs:
           python3 overrides/developer-badge-patch.py
           python3 overrides/v35-patch.py
           python3 overrides/v35-finalize.py
+          python3 overrides/v37-9-estoque-espessuras.py
 
           cat > _site/index.html <<'EOF'
           <!DOCTYPE html>
@@ -83,6 +84,7 @@ jobs:
           test -s _site/pedido-central.js
           test -s _site/pedido.html
           test -s _site/expedicao.html
+          test -s _site/estoque.html
           grep -q 'versão 37.7' _site/painel_producao.html
           grep -q 'qualityGateModal' _site/painel_producao.html
           grep -q 'qualityGateSelectAllWrap' _site/painel_producao.html
@@ -105,6 +107,8 @@ jobs:
           grep -q 'let-erp-menu-star' _site/navigation-v37-5.js
           grep -q 'menu_favoritos' _site/navigation-v37-5.js
           grep -q 'body>.topbar' _site/navigation-v37-5.js
+          grep -q '>3 mm<' _site/estoque.html
+          grep -q '>5 mm<' _site/estoque.html
 
       - name: Registrar falha
         if: failure()
