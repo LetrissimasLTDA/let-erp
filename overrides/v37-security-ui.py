@@ -118,3 +118,9 @@ patch=Path('overrides/v37-5-menu-favorites-compact.py')
 if not patch.exists():
     raise SystemExit('Patch v37.5 não encontrado.')
 exec(compile(patch.read_text(encoding='utf-8'),'overrides/v37-5-menu-favorites-compact.py','exec'))
+
+# v37.7: corrige Central do Pedido, finalização de atrasados e atraso automático.
+patch=Path('overrides/v37-7-stability-patch.py')
+if not patch.exists():
+    raise SystemExit('Patch v37.7 não encontrado.')
+exec(compile(patch.read_text(encoding='utf-8'),'overrides/v37-7-stability-patch.py','exec'))
