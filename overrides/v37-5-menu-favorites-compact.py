@@ -15,7 +15,13 @@ for html in site.glob('*.html'):
         continue
     text=html.read_text(encoding='utf-8')
     if 'navigation-v37-5.js' not in text:
-        text=text.replace('</body>',tag+'\n</body>',1)
+        # Usa o ÚLTIMO </body> real da página. Algumas telas possuem a string
+        # "</body>" dentro de JavaScript de impressão, e replace(...,1)
+        # corrompia o script ao inserir a navegação no lugar errado.
+        pos=text.rfind('</body>')
+        if pos<0:
+            raise SystemExit('Fechamento </body> não encontrado em '+html.name)
+        text=text[:pos]+tag+'\n'+text[pos:]
     html.write_text(text,encoding='utf-8')
 
 panel=site/'painel_producao.html'
