@@ -46,3 +46,11 @@ for token in ['function printSheet()','function printLabel()','async function lo
 for token in ['finalizar_pedido_erp','marcar_atrasos_automaticos','window.finalizarPedido']:
     if token not in (site/'stability-v37-7.js').read_text(encoding='utf-8'):
         raise SystemExit('Correção v37.7 incompleta: '+token)
+
+# ------------------------------------------------------------
+# 3) Checklist: opção para marcar/desmarcar todos os itens.
+# ------------------------------------------------------------
+select_all_patch=root/'v37-8-checklist-select-all.py'
+if not select_all_patch.exists():
+    raise SystemExit('Patch de Marcar Todos do checklist não encontrado.')
+exec(compile(select_all_patch.read_text(encoding='utf-8'),'overrides/v37-8-checklist-select-all.py','exec'))
