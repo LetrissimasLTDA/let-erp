@@ -70,6 +70,7 @@ jobs:
           node --check _site/factory-suite.js
           node --check _site/navigation-v37-5.js
           node --check _site/stability-v37-7.js
+          node --check _site/checklist-select-all-v37-8.js
           node --check _site/pedido-central.js
 
       - name: Validar recursos atuais
@@ -78,11 +79,14 @@ jobs:
           test -s _site/painel_producao.html
           test -s _site/navigation-v37-5.js
           test -s _site/stability-v37-7.js
+          test -s _site/checklist-select-all-v37-8.js
           test -s _site/pedido-central.js
           test -s _site/pedido.html
           test -s _site/expedicao.html
           grep -q 'versão 37.7' _site/painel_producao.html
           grep -q 'qualityGateModal' _site/painel_producao.html
+          grep -q 'qualityGateSelectAllWrap' _site/painel_producao.html
+          grep -q 'checklist-select-all-sticky-v37-8-1' _site/painel_producao.html
           grep -q 'CENTRAL DO PEDIDO' _site/painel_producao.html
           grep -q 'MATERIAL MKT' _site/painel_producao.html
           grep -q 'v37-role-permissions-enforced' _site/painel_producao.html
@@ -90,6 +94,8 @@ jobs:
           grep -q 'pedido-central.js' _site/pedido.html
           grep -q 'finalizar_pedido_erp' _site/stability-v37-7.js
           grep -q 'marcar_atrasos_automaticos' _site/stability-v37-7.js
+          grep -q 'qualityGateSelectAll' _site/checklist-select-all-v37-8.js
+          grep -q 'createWrap' _site/checklist-select-all-v37-8.js
           grep -q 'let-erp-chat-button' _site/theme.js
           grep -q 'Gerenciar Acessos' _site/theme.js
           grep -q 'href:"reenvios.html"' _site/theme.js
@@ -112,8 +118,10 @@ jobs:
             test -f _site/painel_producao.html && echo 'panel=present' || echo 'panel=MISSING'
             test -f _site/navigation-v37-5.js && echo 'navigation=present' || echo 'navigation=MISSING'
             test -f _site/stability-v37-7.js && echo 'stability=present' || echo 'stability=MISSING'
+            test -f _site/checklist-select-all-v37-8.js && echo 'select_all=present' || echo 'select_all=MISSING'
             test -f _site/pedido-central.js && echo 'pedido_central=present' || echo 'pedido_central=MISSING'
             grep -q 'versão 37.7' _site/painel_producao.html 2>/dev/null && echo 'panel_v37_7=yes' || echo 'panel_v37_7=no'
+            grep -q 'qualityGateSelectAllWrap' _site/painel_producao.html 2>/dev/null && echo 'select_all_ui=yes' || echo 'select_all_ui=no'
             grep -q 'let-erp-menu-group' _site/navigation-v37-5.js 2>/dev/null && echo 'grouped_menu=yes' || echo 'grouped_menu=no'
             grep -q 'menu_favoritos' _site/navigation-v37-5.js 2>/dev/null && echo 'favorites=yes' || echo 'favorites=no'
           } > DEPLOY_FAILED.txt
