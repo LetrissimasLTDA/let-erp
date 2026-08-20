@@ -1,3 +1,3 @@
-commit=985d016b7cc7db3b700d28779aebb221230c7e3d
-version=37.5
-deployed_at=2026-08-18T19:52:07Z
+commit=a7ae257c3f8c7f69b4b3289a8955dd1fb4b25ed8
+version=37.7
+deployed_at=2026-08-20T11:58:14Z
