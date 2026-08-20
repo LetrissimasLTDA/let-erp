@@ -1,0 +1,8 @@
+commit=6bef4658222e7e1fbb5b56893af141f2f5e1d4d1
+version=37.5
+failed_at=2026-08-20T11:55:16Z
+panel=present
+navigation=present
+panel_v37_5=no
+grouped_menu=yes
+favorites=yes
